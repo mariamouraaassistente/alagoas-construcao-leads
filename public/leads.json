@@ -1,0 +1,2574 @@
+{
+  "meta": {
+    "state": "Alagoas",
+    "focus": "construtoras, casas de construção, depósitos, madeireiras, tintas e home centers",
+    "source": "OpenStreetMap + Nominatim",
+    "generated_at": "2026-05-04 14:03:31",
+    "total_raw_candidates": 106,
+    "total_leads": 106
+  },
+  "leads": [
+    {
+      "name": "Carajás Home Center",
+      "lat": -9.6469114,
+      "lon": -35.7136453,
+      "city": "Maceió",
+      "state": "AL",
+      "phone": "4003-2020",
+      "website": "https://www.carajas.com.br/",
+      "opening_hours": "Mo-Sa 08:00-22:00, Su 08:00-20:00",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 112,
+      "tags": {
+        "addr:city": "Maceió",
+        "addr:postcode": "57031-530",
+        "addr:street": "Avenida Comendador Gustavo Paiva",
+        "addr:suburb": "Mangabeiras",
+        "air_conditioning": "yes",
+        "building": "yes",
+        "opening_hours": "Mo-Sa 08:00-22:00, Su 08:00-20:00",
+        "phone": "4003-2020",
+        "shop": "hardware",
+        "website": "https://www.carajas.com.br/",
+        "wheelchair": "yes"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6469114,-35.7136453",
+      "phone_link": "tel:4003-2020"
+    },
+    {
+      "name": "Oliveira Construções",
+      "lat": -9.6033625,
+      "lon": -35.759714,
+      "city": "Maceió",
+      "state": "AL",
+      "phone": "82 3341-1224",
+      "website": "",
+      "opening_hours": "Segunda-Sábado 08:00-18:30 Domingo 08:00-12:00",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 100,
+      "tags": {
+        "addr:city": "Maceió",
+        "addr:housenumber": "16",
+        "addr:postcode": "57062-010",
+        "addr:street": "Alameda José Lopes Albuquerque",
+        "addr:suburb": "Petrópolis",
+        "building": "yes",
+        "opening_hours": "Segunda-Sábado 08:00-18:30 Domingo 08:00-12:00",
+        "phone": "82 3341-1224",
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6033625,-35.759714",
+      "phone_link": "tel:82 3341-1224"
+    },
+    {
+      "name": "Home Center Tupan",
+      "lat": -9.5944586,
+      "lon": -35.7518053,
+      "city": "",
+      "state": "AL",
+      "phone": "+55 82 3194 2599",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 90,
+      "tags": {
+        "addr:housenumber": "7049",
+        "addr:postcode": "57061-000",
+        "addr:street": "Avenida Doutor Durval de Góes Monteiro",
+        "addr:suburb": "Tabuleiro do Martins",
+        "building": "commercial",
+        "building:levels": "1",
+        "email": "sac@tupan.com.br",
+        "phone": "+55 82 3194 2599",
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.5944586,-35.7518053",
+      "phone_link": "tel:+55 82 3194 2599"
+    },
+    {
+      "name": "Almir Ferragens Home Center",
+      "lat": -9.3849825,
+      "lon": -37.2427958,
+      "city": "Santana do Ipanema",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 87,
+      "tags": {
+        "addr:city": "Santana do Ipanema",
+        "addr:housenumber": "1679",
+        "addr:postcode": "57500-000",
+        "addr:street": "AL-130",
+        "addr:suburb": "Domingos Acácio",
+        "building": "yes",
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.3849825,-37.2427958"
+    },
+    {
+      "name": "Home Center Total Giro",
+      "lat": -9.5467727,
+      "lon": -35.745354,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 82,
+      "tags": {
+        "building": "yes",
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.5467727,-35.745354"
+    },
+    {
+      "name": "Itabaiana Material de Construção",
+      "lat": -10.6850351,
+      "lon": -37.415583,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 82,
+      "tags": {
+        "building": "yes",
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6850351,-37.415583"
+    },
+    {
+      "name": "JC MATERIAL DE CONSTRUÇÃO",
+      "lat": -8.9173592,
+      "lon": -36.7091813,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 82,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.9173592,-36.7091813"
+    },
+    {
+      "name": "MG MATERIAL DE CONSTRUÇÃO",
+      "lat": -8.9179776,
+      "lon": -36.7111427,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 82,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.9179776,-36.7111427"
+    },
+    {
+      "name": "TAVARES CASA E CONSTRUÇÃO",
+      "lat": -8.9164903,
+      "lon": -36.7098711,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 82,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.9164903,-36.7098711"
+    },
+    {
+      "name": "Andreteles Construções",
+      "lat": -8.981027,
+      "lon": -38.2177081,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 80,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.981027,-38.2177081"
+    },
+    {
+      "name": "BARRA NOVA CONSTRUÇÕES",
+      "lat": -8.9194007,
+      "lon": -36.7094245,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 80,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.9194007,-36.7094245"
+    },
+    {
+      "name": "Carajás Construções",
+      "lat": -9.5905733,
+      "lon": -35.7614034,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 80,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.5905733,-35.7614034"
+    },
+    {
+      "name": "Casa da Construção",
+      "lat": -9.5157463,
+      "lon": -36.0017088,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 80,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.5157463,-36.0017088"
+    },
+    {
+      "name": "Delgado Construções",
+      "lat": -8.9828325,
+      "lon": -38.2182353,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 80,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.9828325,-38.2182353"
+    },
+    {
+      "name": "Ipanema Construções",
+      "lat": -9.66066,
+      "lon": -35.7237839,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 80,
+      "tags": {
+        "building": "yes",
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.66066,-35.7237839"
+    },
+    {
+      "name": "Paullinely Construções",
+      "lat": -8.978622,
+      "lon": -38.2170717,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 80,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.978622,-38.2170717"
+    },
+    {
+      "name": "RL Construções",
+      "lat": -9.4189588,
+      "lon": -36.63879,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 78,
+      "tags": {
+        "building": "yes",
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.4189588,-36.63879"
+    },
+    {
+      "name": "Setal Construções",
+      "lat": -8.9798475,
+      "lon": -38.2162536,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 78,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.9798475,-38.2162536"
+    },
+    {
+      "name": "Mega Center Casa & Construção",
+      "lat": -8.8948021,
+      "lon": -35.1501707,
+      "city": "São José da Coroa Grande",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 77,
+      "tags": {
+        "addr:city": "São José da Coroa Grande",
+        "addr:postcode": "55565-000",
+        "addr:street": "Rua Pastor Jose Amaro da Silva",
+        "addr:suburb": "Centro",
+        "shop": "hardware",
+        "trade": "building_supplies"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.8948021,-35.1501707"
+    },
+    {
+      "name": "Popular Home center",
+      "lat": -9.7367728,
+      "lon": -36.6451398,
+      "city": "Arapiraca",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "doityourself",
+      "office": "",
+      "source": [
+        "shop=doityourself",
+        "name-keyword"
+      ],
+      "score": 77,
+      "tags": {
+        "addr:city": "Arapiraca",
+        "addr:housenumber": "948",
+        "addr:postcode": "57315745",
+        "addr:street": "Rod. al 220",
+        "addr:suburb": "Senador Arnon de Melo",
+        "internet_access": "yes",
+        "shop": "doityourself",
+        "stroller": "yes",
+        "wheelchair": "yes"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.7367728,-36.6451398"
+    },
+    {
+      "name": "Altamir Construção",
+      "lat": -8.8606359,
+      "lon": -36.4842565,
+      "city": "Garanhuns",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 75,
+      "tags": {
+        "addr:city": "Garanhuns",
+        "addr:housenumber": "10",
+        "addr:postcode": "55293000",
+        "addr:street": "Rua Prof. Francisco Félix Viana",
+        "addr:suburb": "Dom Hélder Câmara",
+        "building": "yes",
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.8606359,-36.4842565"
+    },
+    {
+      "name": "Loja da Construção",
+      "lat": -9.6314365,
+      "lon": -35.6998205,
+      "city": "Maceió",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 75,
+      "tags": {
+        "addr:city": "Maceió",
+        "addr:housenumber": "400",
+        "addr:postcode": "57038-000",
+        "addr:street": "Avenida Comendador Gustavo Paiva",
+        "addr:suburb": "Cruz das Almas",
+        "building": "yes",
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6314365,-35.6998205"
+    },
+    {
+      "name": "AM - comercial de construção",
+      "lat": -9.5712107,
+      "lon": -35.7408402,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 72,
+      "tags": {
+        "addr:street": "Avenida Menino Marcelo",
+        "name:pt": "AM - comercial de construção",
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.5712107,-35.7408402"
+    },
+    {
+      "name": "Construtec Material de Construção",
+      "lat": -10.2881681,
+      "lon": -37.0225365,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "doityourself",
+      "office": "",
+      "source": [
+        "shop=doityourself",
+        "name-keyword"
+      ],
+      "score": 72,
+      "tags": {
+        "shop": "doityourself"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.2881681,-37.0225365"
+    },
+    {
+      "name": "Deposito Encontro do Sol",
+      "lat": -9.570342,
+      "lon": -35.7573281,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 72,
+      "tags": {
+        "name:pt": "Deposito Encontro do Sol",
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.570342,-35.7573281"
+    },
+    {
+      "name": "Madeireira Preço Bom",
+      "lat": -10.6821954,
+      "lon": -37.4272823,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 72,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6821954,-37.4272823"
+    },
+    {
+      "name": "Madeireira São Jose",
+      "lat": -10.6852554,
+      "lon": -37.4383421,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 72,
+      "tags": {
+        "building": "yes",
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6852554,-37.4383421"
+    },
+    {
+      "name": "Madeireira São Jose",
+      "lat": -10.6853556,
+      "lon": -37.4387234,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 72,
+      "tags": {
+        "building": "yes",
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6853556,-37.4387234"
+    },
+    {
+      "name": "Madeireira e Materiais de Construção Guimarães",
+      "lat": -10.2869952,
+      "lon": -37.0218325,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "doityourself",
+      "office": "",
+      "source": [
+        "shop=doityourself",
+        "name-keyword"
+      ],
+      "score": 72,
+      "tags": {
+        "shop": "doityourself"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.2869952,-37.0218325"
+    },
+    {
+      "name": "Tangará Meterias de Construção",
+      "lat": -10.6837025,
+      "lon": -37.4285316,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 72,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6837025,-37.4285316"
+    },
+    {
+      "name": "Casa Construtor",
+      "lat": -9.4001626,
+      "lon": -38.2332995,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 70,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.4001626,-38.2332995"
+    },
+    {
+      "name": "Construcasa",
+      "lat": -9.4430781,
+      "lon": -38.2157704,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 70,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.4430781,-38.2157704"
+    },
+    {
+      "name": "Morada Construção",
+      "lat": -9.7650328,
+      "lon": -36.638452,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 70,
+      "tags": {
+        "building": "yes",
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.7650328,-36.638452"
+    },
+    {
+      "name": "Viana Construcampo",
+      "lat": -8.9833167,
+      "lon": -38.2179797,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware",
+        "name-keyword"
+      ],
+      "score": 70,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.9833167,-38.2179797"
+    },
+    {
+      "name": "Casas Jardim Tintas",
+      "lat": -9.6224306,
+      "lon": -35.7383239,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "doityourself",
+      "office": "",
+      "source": [
+        "shop=doityourself",
+        "name-keyword"
+      ],
+      "score": 62,
+      "tags": {
+        "addr:housenumber": "3086",
+        "addr:street": "Avenida Fernandes Lima",
+        "building": "yes",
+        "shop": "doityourself"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6224306,-35.7383239"
+    },
+    {
+      "name": "Mérito - Locação de Equipamentos para Construção",
+      "lat": -9.6723754,
+      "lon": -35.7232507,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "doityourself",
+      "office": "",
+      "source": [
+        "shop=doityourself",
+        "name-keyword"
+      ],
+      "score": 62,
+      "tags": {
+        "addr:housenumber": "447",
+        "addr:street": "Avenida Cícero Tolêdo",
+        "shop": "doityourself"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6723754,-35.7232507"
+    },
+    {
+      "name": "Shop da Construção",
+      "lat": -10.2825438,
+      "lon": -37.0196114,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "doityourself",
+      "office": "",
+      "source": [
+        "shop=doityourself",
+        "name-keyword"
+      ],
+      "score": 60,
+      "tags": {
+        "shop": "doityourself"
+      },
+      "tier": "A",
+      "fit": "alto",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.2825438,-37.0196114"
+    },
+    {
+      "name": "Tupan",
+      "lat": -9.5940887,
+      "lon": -35.7512586,
+      "city": "",
+      "state": "AL",
+      "phone": "+55 82 3194-2599",
+      "website": "",
+      "opening_hours": "Mo-Fr 08:00-20:00, Sa 08:00-19:00, Su 08:30-17:00",
+      "shop": "doityourself",
+      "office": "",
+      "source": [
+        "shop=doityourself"
+      ],
+      "score": 55,
+      "tags": {
+        "addr:housenumber": "7049",
+        "addr:postcode": "57061-000",
+        "addr:street": "Avenida Doutor Durval de Góes Monteiro",
+        "brand": "Mo-Sa 08:00-18:00",
+        "opening_hours": "Mo-Fr 08:00-20:00, Sa 08:00-19:00, Su 08:30-17:00",
+        "phone": "+55 82 3194-2599",
+        "shop": "doityourself"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.5940887,-35.7512586",
+      "phone_link": "tel:+55 82 3194-2599"
+    },
+    {
+      "name": "Carajás",
+      "lat": -9.7592098,
+      "lon": -36.6489588,
+      "city": "Arapiraca",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware"
+      ],
+      "score": 50,
+      "tags": {
+        "addr:city": "Arapiraca",
+        "addr:street": "Rua Marechal Deodoro da Fonseca",
+        "building": "yes",
+        "check_date": "2025-04-13",
+        "shop": "hardware",
+        "wheelchair": "yes"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.7592098,-36.6489588"
+    },
+    {
+      "name": "Casa das Tintas",
+      "lat": -9.7576952,
+      "lon": -36.6523929,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "paint",
+      "office": "",
+      "source": [
+        "shop=paint",
+        "name-keyword"
+      ],
+      "score": 50,
+      "tags": {
+        "check_date": "2025-04-13",
+        "shop": "paint"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.7576952,-36.6523929"
+    },
+    {
+      "name": "Casa das Tintas",
+      "lat": -9.6570551,
+      "lon": -35.7068953,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "paint",
+      "office": "",
+      "source": [
+        "shop=paint",
+        "name-keyword"
+      ],
+      "score": 50,
+      "tags": {
+        "addr:housenumber": "897",
+        "addr:street": "Rua Deputado José Lages",
+        "shop": "paint"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6570551,-35.7068953"
+    },
+    {
+      "name": "Construtora Construir",
+      "lat": -9.7490579,
+      "lon": -36.6499857,
+      "city": "",
+      "state": "AL",
+      "phone": "+55 82 3482-0001",
+      "website": "",
+      "opening_hours": "Mo-Sa 08:00-12:00, 14:00-18:00",
+      "shop": "",
+      "office": "engineering",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 50,
+      "tags": {
+        "addr:housenumber": "157",
+        "addr:postcode": "57312-485",
+        "addr:street": "Avenida Deputada Ceci Cunha",
+        "office": "engineering",
+        "opening_hours": "Mo-Sa 08:00-12:00, 14:00-18:00",
+        "phone": "+55 82 3482-0001"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.7490579,-36.6499857",
+      "phone_link": "tel:+55 82 3482-0001"
+    },
+    {
+      "name": "Madereira Castelo",
+      "lat": -10.6818895,
+      "lon": -37.4264418,
+      "city": "Itabaiana",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware"
+      ],
+      "score": 50,
+      "tags": {
+        "addr:city": "Itabaiana",
+        "addr:housenumber": "1205",
+        "addr:postcode": "49500000",
+        "addr:street": "Avenida Percilio Andrade",
+        "addr:suburb": "Mamede Paes Mendonça",
+        "building": "yes",
+        "shop": "hardware"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6818895,-37.4264418"
+    },
+    {
+      "name": "Madereira Cunha",
+      "lat": -10.6818413,
+      "lon": -37.4259023,
+      "city": "Itabaiana",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware"
+      ],
+      "score": 50,
+      "tags": {
+        "addr:city": "Itabaiana",
+        "addr:housenumber": "1339",
+        "addr:postcode": "49500000",
+        "addr:street": "Avenida Percilio Andrade",
+        "addr:suburb": "Mamede Paes Mendonça",
+        "building": "yes",
+        "shop": "hardware"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6818413,-37.4259023"
+    },
+    {
+      "name": "Tintas e Cores",
+      "lat": -9.5870952,
+      "lon": -35.7622626,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "paint",
+      "office": "",
+      "source": [
+        "shop=paint",
+        "name-keyword"
+      ],
+      "score": 50,
+      "tags": {
+        "shop": "paint"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.5870952,-35.7622626"
+    },
+    {
+      "name": "W Tintas",
+      "lat": -10.6854578,
+      "lon": -37.4306639,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "paint",
+      "office": "",
+      "source": [
+        "shop=paint",
+        "name-keyword"
+      ],
+      "score": 50,
+      "tags": {
+        "shop": "paint"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6854578,-37.4306639"
+    },
+    {
+      "name": "Lares Construções",
+      "lat": -9.6679968,
+      "lon": -35.7145364,
+      "city": "Maceió",
+      "state": "AL",
+      "phone": "",
+      "website": "https://www.laresconstrucoes.com.br/",
+      "opening_hours": "",
+      "shop": "",
+      "office": "engineering",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 48,
+      "tags": {
+        "addr:city": "Maceió",
+        "addr:housenumber": "776",
+        "addr:street": "Rua Jangadeiros Alagoanos",
+        "addr:suburb": "Pajuçara",
+        "building": "yes",
+        "contact:email": "lares@laresconstrucoes.com.br",
+        "contact:phone": "82 3231.0038",
+        "office": "engineering",
+        "website": "https://www.laresconstrucoes.com.br/"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6679968,-35.7145364"
+    },
+    {
+      "name": "Comercial Araújo Barros",
+      "lat": -9.5276463,
+      "lon": -36.9870081,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware"
+      ],
+      "score": 47,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.5276463,-36.9870081"
+    },
+    {
+      "name": "Dinãmica Marmores e Granitos",
+      "lat": -10.6854387,
+      "lon": -37.4396279,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware"
+      ],
+      "score": 47,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6854387,-37.4396279"
+    },
+    {
+      "name": "MADEREIRA MONTE HOREBE",
+      "lat": -8.918712,
+      "lon": -36.709798,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware"
+      ],
+      "score": 47,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.918712,-36.709798"
+    },
+    {
+      "name": "Casa Lealdade",
+      "lat": -8.982591,
+      "lon": -38.2183474,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware"
+      ],
+      "score": 45,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.982591,-38.2183474"
+    },
+    {
+      "name": "Casa do Criador",
+      "lat": -10.5500531,
+      "lon": -37.5321625,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware"
+      ],
+      "score": 45,
+      "tags": {
+        "building": "yes",
+        "shop": "hardware"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.5500531,-37.5321625"
+    },
+    {
+      "name": "Ideia Sistemas",
+      "lat": -8.8887462,
+      "lon": -36.4903153,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "https://www.ideiasistemas.com.br",
+      "opening_hours": "",
+      "shop": "doityourself",
+      "office": "",
+      "source": [
+        "shop=doityourself"
+      ],
+      "score": 45,
+      "tags": {
+        "addr:housename": "Rua Dr. José Mariano",
+        "addr:housenumber": "447D",
+        "addr:postcode": "55295-335",
+        "addr:street": "Garanhuns",
+        "shop": "doityourself",
+        "website": "www.ideiasistemas.com.br"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.8887462,-36.4903153"
+    },
+    {
+      "name": "Madeiras Amazonia",
+      "lat": -9.7489358,
+      "lon": -36.6643978,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware"
+      ],
+      "score": 45,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.7489358,-36.6643978"
+    },
+    {
+      "name": "Madereira Cunha",
+      "lat": -10.6817584,
+      "lon": -37.4262958,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware"
+      ],
+      "score": 45,
+      "tags": {
+        "addr:housenumber": "1399",
+        "addr:street": "Avenida Percilio Andrade",
+        "building": "yes",
+        "layer": "-1",
+        "shop": "hardware"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6817584,-37.4262958"
+    },
+    {
+      "name": "Madereira Modelo",
+      "lat": -10.6794422,
+      "lon": -37.4159861,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware"
+      ],
+      "score": 45,
+      "tags": {
+        "building": "yes",
+        "shop": "hardware"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6794422,-37.4159861"
+    },
+    {
+      "name": "O Madereiro",
+      "lat": -10.359534,
+      "lon": -37.7020503,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware"
+      ],
+      "score": 45,
+      "tags": {
+        "shop": "hardware"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.359534,-37.7020503"
+    },
+    {
+      "name": "Leroy Merlin",
+      "lat": -9.6278802,
+      "lon": -35.6965481,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "doityourself",
+      "office": "",
+      "source": [
+        "shop=doityourself"
+      ],
+      "score": 40,
+      "tags": {
+        "addr:street": "Avenida Comendador Gustavo Paiva",
+        "brand": "Leroy Merlin",
+        "brand:wikidata": "Q889624",
+        "brand:wikipedia": "en:Leroy Merlin",
+        "shop": "doityourself"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6278802,-35.6965481"
+    },
+    {
+      "name": "Rio Negro",
+      "lat": -9.6031067,
+      "lon": -35.7589153,
+      "city": "Maceió",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "Segunda-Sábado 08:00-18:00",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware"
+      ],
+      "score": 40,
+      "tags": {
+        "addr:city": "Maceió",
+        "addr:street": "Avenida Empresário Lourival Lôbo Ferreira",
+        "addr:suburb": "Petrópolis",
+        "building": "yes",
+        "opening_hours": "Segunda-Sábado 08:00-18:00",
+        "shop": "hardware"
+      },
+      "tier": "B",
+      "fit": "médio",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6031067,-35.7589153"
+    },
+    {
+      "name": "Santana Home Center",
+      "lat": -9.5298231,
+      "lon": -36.9856989,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "supermarket",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 37,
+      "tags": {
+        "shop": "supermarket"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.5298231,-36.9856989"
+    },
+    {
+      "name": "Comarte",
+      "lat": -10.514068,
+      "lon": -37.0574564,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "doityourself",
+      "office": "",
+      "source": [
+        "shop=doityourself"
+      ],
+      "score": 35,
+      "tags": {
+        "building": "yes",
+        "shop": "doityourself"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.514068,-37.0574564"
+    },
+    {
+      "name": "Construtora B Santos",
+      "lat": -9.6466242,
+      "lon": -35.7038799,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 35,
+      "tags": {
+        "landuse": "commercial"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6466242,-35.7038799"
+    },
+    {
+      "name": "Construções Aldebaran",
+      "lat": -9.6397816,
+      "lon": -35.7351163,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 35,
+      "tags": {
+        "landuse": "retail"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6397816,-35.7351163"
+    },
+    {
+      "name": "Ferreira Construções",
+      "lat": -9.628175,
+      "lon": -35.7201099,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 35,
+      "tags": {
+        "description": "Loja de material de construção",
+        "landuse": "retail"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.628175,-35.7201099"
+    },
+    {
+      "name": "Home Center",
+      "lat": -9.4094113,
+      "lon": -36.6315901,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "furniture",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 35,
+      "tags": {
+        "building": "yes",
+        "shop": "furniture"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.4094113,-36.6315901"
+    },
+    {
+      "name": "Ibratin",
+      "lat": -9.6455933,
+      "lon": -35.7004419,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "https://www.ibratin.com.br/",
+      "opening_hours": "",
+      "shop": "paint",
+      "office": "",
+      "source": [
+        "shop=paint"
+      ],
+      "score": 35,
+      "tags": {
+        "building": "yes",
+        "shop": "paint",
+        "website": "https://www.ibratin.com.br/"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6455933,-35.7004419"
+    },
+    {
+      "name": "Ipanema Construções",
+      "lat": -9.6339531,
+      "lon": -35.7160373,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "trade",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 35,
+      "tags": {
+        "addr:housenumber": "1080",
+        "addr:street": "Avenida Juca Sampaio",
+        "building": "yes",
+        "shop": "trade",
+        "trade": "building_supplies"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6339531,-35.7160373"
+    },
+    {
+      "name": "Construtora Relevo",
+      "lat": -9.7624229,
+      "lon": -36.5405269,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 33,
+      "tags": {
+        "landuse": "industrial"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.7624229,-36.5405269"
+    },
+    {
+      "name": "DR Construções",
+      "lat": -9.3818155,
+      "lon": -37.9961863,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 33,
+      "tags": {
+        "building": "commercial",
+        "building:levels": "1",
+        "smoking": "no"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.3818155,-37.9961863"
+    },
+    {
+      "name": "Deposito da Comercial Ouro Verde",
+      "lat": -10.6796634,
+      "lon": -37.42628,
+      "city": "Itabaiana",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 32,
+      "tags": {
+        "addr:city": "Itabaiana",
+        "addr:housenumber": "3630",
+        "addr:postcode": "49500-000",
+        "addr:street": "Rua Francisco Oliveira",
+        "addr:suburb": "Mamede Paes Mendonça",
+        "building": "warehouse",
+        "building:levels": "1",
+        "height": "4",
+        "roof:colour": "grey"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6796634,-37.42628"
+    },
+    {
+      "name": "Casa do Construtor",
+      "lat": -10.6824355,
+      "lon": -37.4231019,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "tool_hire",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 30,
+      "tags": {
+        "brand": "Casa do Construtor",
+        "brand:wikidata": "Q118672258",
+        "shop": "tool_hire"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6824355,-37.4231019"
+    },
+    {
+      "name": "Depositos Tio Luiz",
+      "lat": -10.6815868,
+      "lon": -37.4258143,
+      "city": "Itabaiana",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 30,
+      "tags": {
+        "addr:city": "Itabaiana",
+        "addr:postcode": "49500000",
+        "addr:street": "Rua Manoel da Lapa",
+        "addr:suburb": "Mamede Paes Mendonça",
+        "building": "warehouse",
+        "building:levels": "2",
+        "height": "6",
+        "roof:colour": "grey"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6815868,-37.4258143"
+    },
+    {
+      "name": "João Meneses",
+      "lat": -10.078561,
+      "lon": -37.0566417,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "hardware",
+      "office": "",
+      "source": [
+        "shop=hardware"
+      ],
+      "score": 30,
+      "tags": {
+        "atm": "yes",
+        "building": "yes",
+        "shop": "hardware"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.078561,-37.0566417"
+    },
+    {
+      "name": "Centro Pedagógico Educar e Construir",
+      "lat": -9.6492526,
+      "lon": -35.7072365,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 27,
+      "tags": {
+        "addr:housenumber": "700",
+        "addr:street": "Rua Empresário Carlos da Silva Nogueira",
+        "building": "yes",
+        "building:levels": "5",
+        "short_name": "CPEC"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6492526,-35.7072365"
+    },
+    {
+      "name": "Coral Outlet Das Tintas",
+      "lat": -9.4012854,
+      "lon": -38.2186755,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "variety_store",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 27,
+      "tags": {
+        "operator": "Coral Outlet Das Tintas",
+        "shop": "variety_store"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.4012854,-38.2186755"
+    },
+    {
+      "name": "Casas Jardim",
+      "lat": -9.6421827,
+      "lon": -35.7356852,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "paint",
+      "office": "",
+      "source": [
+        "shop=paint"
+      ],
+      "score": 25,
+      "tags": {
+        "addr:housenumber": "991",
+        "addr:street": "Avenida Fernandes Lima",
+        "shop": "paint"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6421827,-35.7356852"
+    },
+    {
+      "name": "Construagro",
+      "lat": -10.6044591,
+      "lon": -37.1133654,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 25,
+      "tags": {
+        "addr:street": "Praça Doutor Mario Pinotti",
+        "building": "commercial"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6044591,-37.1133654"
+    },
+    {
+      "name": "Construlyra",
+      "lat": -8.8156834,
+      "lon": -35.1892509,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "trade",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 25,
+      "tags": {
+        "shop": "trade",
+        "trade": "building_supplies"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.8156834,-35.1892509"
+    },
+    {
+      "name": "Deposito Agreste",
+      "lat": -10.6803149,
+      "lon": -37.4266181,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 25,
+      "tags": {
+        "building": "garage",
+        "landuse": "industrial"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6803149,-37.4266181"
+    },
+    {
+      "name": "Madeireira ABL",
+      "lat": -10.5809139,
+      "lon": -37.343389,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 25,
+      "tags": {
+        "building": "yes"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.5809139,-37.343389"
+    },
+    {
+      "name": "Atacarejo Bom Sonho",
+      "lat": -9.7622576,
+      "lon": -36.5410493,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "doityourself",
+      "office": "",
+      "source": [
+        "shop=doityourself"
+      ],
+      "score": 22,
+      "tags": {
+        "building": "yes",
+        "shop": "doityourself"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.7622576,-36.5410493"
+    },
+    {
+      "name": "Casa Lar",
+      "lat": -9.6345553,
+      "lon": -35.7255064,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "doityourself",
+      "office": "",
+      "source": [
+        "shop=doityourself"
+      ],
+      "score": 20,
+      "tags": {
+        "shop": "doityourself"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6345553,-35.7255064"
+    },
+    {
+      "name": "Agrovila/02 Bloco/01",
+      "lat": -9.0126784,
+      "lon": -38.2215566,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "place": "hamlet"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.0126784,-38.2215566"
+    },
+    {
+      "name": "Agrovila/04 Bloco/02",
+      "lat": -8.9224868,
+      "lon": -38.1736999,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "place": "hamlet"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.9224868,-38.1736999"
+    },
+    {
+      "name": "Agrovila/06 Bloco/02",
+      "lat": -8.9408152,
+      "lon": -38.1563762,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "place": "hamlet"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.9408152,-38.1563762"
+    },
+    {
+      "name": "Agrovila/07 Bloco/02",
+      "lat": -8.9698265,
+      "lon": -38.1488915,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "place": "hamlet"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.9698265,-38.1488915"
+    },
+    {
+      "name": "Agrovila/08 Bloco/02",
+      "lat": -8.9349093,
+      "lon": -38.1338366,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "place": "hamlet"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.9349093,-38.1338366"
+    },
+    {
+      "name": "Agrovila/09 Bloco/02",
+      "lat": -8.9510374,
+      "lon": -38.1272308,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "place": "hamlet"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.9510374,-38.1272308"
+    },
+    {
+      "name": "Agrovila/10 Bloco/02",
+      "lat": -8.9292394,
+      "lon": -38.1058907,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "place": "hamlet"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.9292394,-38.1058907"
+    },
+    {
+      "name": "Agrovila/11 Bloco/02",
+      "lat": -8.9606614,
+      "lon": -38.1127827,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "place": "hamlet"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.9606614,-38.1127827"
+    },
+    {
+      "name": "Agrovila/12 Bloco/02",
+      "lat": -8.9415421,
+      "lon": -38.0810305,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "place": "hamlet"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.9415421,-38.0810305"
+    },
+    {
+      "name": "Blocos de salas de aula do IFAL PIRANHAS",
+      "lat": -9.6233418,
+      "lon": -37.7664328,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "building": "school",
+        "building:levels": "1"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6233418,-37.7664328"
+    },
+    {
+      "name": "Campo de Futebol de Areia - João Sampaio 1",
+      "lat": -9.6077224,
+      "lon": -35.7614344,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "natural": "sand"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.6077224,-35.7614344"
+    },
+    {
+      "name": "Projeto de Assentamento Lagoa das Areias",
+      "lat": -9.7754413,
+      "lon": -37.8444135,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "alt_name": "Agrovila Nossa Senhora Aparecida",
+        "place": "hamlet"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.7754413,-37.8444135"
+    },
+    {
+      "name": "Quadra de Volei de Praia e Futebol de Areia",
+      "lat": -9.7419031,
+      "lon": -36.6283193,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "leisure": "pitch",
+        "sport": "beachvolleyball;beach_soccer",
+        "surface": "sand"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.7419031,-36.6283193"
+    },
+    {
+      "name": "Riacho do Poço da Areia",
+      "lat": -8.8596762,
+      "lon": -37.8280343,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "intermittent": "yes",
+        "waterway": "stream"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.8596762,-37.8280343"
+    },
+    {
+      "name": "Riacho do Poço da Areia",
+      "lat": -8.8771529,
+      "lon": -37.8161113,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "intermittent": "yes",
+        "waterway": "stream"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.8771529,-37.8161113"
+    },
+    {
+      "name": "Riacho do Poço da Areia",
+      "lat": -8.8752925,
+      "lon": -37.8176701,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "intermittent": "yes",
+        "layer": "-1",
+        "tunnel": "culvert",
+        "waterway": "stream"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.8752925,-37.8176701"
+    },
+    {
+      "name": "Sede do Bloco da Alegria",
+      "lat": -10.2819183,
+      "lon": -36.5834218,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 19,
+      "tags": {
+        "historic": "memorial",
+        "inscription": "Sede da escola de Samba Bloco da Alegria.",
+        "memorial": "war_memorial"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.2819183,-36.5834218"
+    },
+    {
+      "name": "Areias Dois",
+      "lat": -9.7801625,
+      "lon": -37.7551298,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 17,
+      "tags": {
+        "place": "hamlet"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.7801625,-37.7551298"
+    },
+    {
+      "name": "Areias Um",
+      "lat": -9.7676538,
+      "lon": -37.7559228,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 17,
+      "tags": {
+        "place": "hamlet"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.7676538,-37.7559228"
+    },
+    {
+      "name": "Cerâmica BlocoBom",
+      "lat": -10.6219674,
+      "lon": -37.4644675,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 17,
+      "tags": {
+        "landuse": "industrial"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6219674,-37.4644675"
+    },
+    {
+      "name": "Malhada da Areia",
+      "lat": -10.6633124,
+      "lon": -38.1634409,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 17,
+      "tags": {
+        "place": "hamlet"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.6633124,-38.1634409"
+    },
+    {
+      "name": "Ponta de Areia",
+      "lat": -10.447609,
+      "lon": -36.6063562,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 17,
+      "tags": {
+        "place": "village"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.447609,-36.6063562"
+    },
+    {
+      "name": "Riacho da Areia",
+      "lat": -9.0080751,
+      "lon": -37.8896928,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 17,
+      "tags": {
+        "intermittent": "yes",
+        "waterway": "stream"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.0080751,-37.8896928"
+    },
+    {
+      "name": "Saco de Areia",
+      "lat": -10.3090583,
+      "lon": -37.1006152,
+      "city": "",
+      "state": "AL",
+      "phone": "",
+      "website": "",
+      "opening_hours": "",
+      "shop": "",
+      "office": "",
+      "source": [
+        "name-keyword"
+      ],
+      "score": 2,
+      "tags": {
+        "place": "hamlet"
+      },
+      "tier": "C",
+      "fit": "baixo",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-10.3090583,-37.1006152"
+    }
+  ]
+}
