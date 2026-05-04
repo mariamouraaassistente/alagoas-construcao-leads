@@ -4,8 +4,8 @@
     "focus": "construtoras, casas de construção, depósitos, madeireiras, tintas e home centers",
     "source": "OpenStreetMap + Nominatim",
     "generated_at": "2026-05-04 14:03:31",
-    "total_raw_candidates": 106,
-    "total_leads": 106
+    "total_raw_candidates": 104,
+    "total_leads": 104
   },
   "leads": [
     {
@@ -462,34 +462,6 @@
       "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.9798475,-38.2162536"
     },
     {
-      "name": "Mega Center Casa & Construção",
-      "lat": -8.8948021,
-      "lon": -35.1501707,
-      "city": "São José da Coroa Grande",
-      "state": "AL",
-      "phone": "",
-      "website": "",
-      "opening_hours": "",
-      "shop": "hardware",
-      "office": "",
-      "source": [
-        "shop=hardware",
-        "name-keyword"
-      ],
-      "score": 77,
-      "tags": {
-        "addr:city": "São José da Coroa Grande",
-        "addr:postcode": "55565-000",
-        "addr:street": "Rua Pastor Jose Amaro da Silva",
-        "addr:suburb": "Centro",
-        "shop": "hardware",
-        "trade": "building_supplies"
-      },
-      "tier": "A",
-      "fit": "alto",
-      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.8948021,-35.1501707"
-    },
-    {
       "name": "Popular Home center",
       "lat": -9.7367728,
       "lon": -36.6451398,
@@ -519,35 +491,6 @@
       "tier": "A",
       "fit": "alto",
       "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-9.7367728,-36.6451398"
-    },
-    {
-      "name": "Altamir Construção",
-      "lat": -8.8606359,
-      "lon": -36.4842565,
-      "city": "Garanhuns",
-      "state": "AL",
-      "phone": "",
-      "website": "",
-      "opening_hours": "",
-      "shop": "hardware",
-      "office": "",
-      "source": [
-        "shop=hardware",
-        "name-keyword"
-      ],
-      "score": 75,
-      "tags": {
-        "addr:city": "Garanhuns",
-        "addr:housenumber": "10",
-        "addr:postcode": "55293000",
-        "addr:street": "Rua Prof. Francisco Félix Viana",
-        "addr:suburb": "Dom Hélder Câmara",
-        "building": "yes",
-        "shop": "hardware"
-      },
-      "tier": "A",
-      "fit": "alto",
-      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=-8.8606359,-36.4842565"
     },
     {
       "name": "Loja da Construção",
