@@ -1,668 +1,391 @@
-import { useMemo, useState } from 'react'
-import type { ChangeEvent, ReactNode } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 
-type FocusKey = 'natalidade' | 'materna' | 'infantil'
-type PresetKey = 'full' | 'p1' | 'p2' | 'custom'
-
-type YearDatum = {
-  year: number
-  natalidadeAl: number
-  natalidadeBr: number
-  mortalidadeMaterna: number
-  mortalidadeInfantil: number
-  consultas: number
-  births: number
+type Lead = {
+  name: string
+  lat: number
+  lon: number
+  city?: string
+  state: string
+  phone?: string
+  phone_link?: string
+  website?: string
+  opening_hours?: string
+  shop?: string
+  office?: string
+  source?: string[]
+  score: number
+  tier: 'A' | 'B' | 'C'
+  fit: 'alto' | 'médio' | 'baixo'
+  google_maps_url: string
+  tags?: Record<string, string>
 }
 
-const YEARS = [
-  2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015,
-  2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025,
-]
-
-const NATALIDADE_AL = [
-  18.9, 18.3, 17.3, 17.36, 17.05, 16.12, 15.91, 15.62, 15.65,
-  14.34, 14.92, 15.49, 14.92, 14.31, 14.15, 14.62, 14.47, 14.11, 14.34,
-]
-
-const NATALIDADE_BR = [
-  16.2, 16.0, 15.8, 15.4, 15.2, 15.1, 14.9, 14.8, 14.7,
-  14.4, 14.3, 14.4, 14.2, 14.1, 14.0, 13.9, 13.8, 13.7, 13.6,
-]
-
-const MORTALIDADE_MATERNA = [
-  43.5, 46.5, 34.3, 59.1, 51.6, 45.7, 59.1, 104.1, 57.4,
-  51.9, 31.8, 49.5, 58.2, 82.7, 53.3, 44.1, 58.0, 45.8, 43.3,
-]
-
-const MORTALIDADE_INFANTIL = [
-  19.1, 18.8, 18.2, 17.9, 17.7, 17.3, 17.0, 16.9, 16.8,
-  16.7, 16.6, 16.5, 16.4, 16.3, 16.2, 16.1, 16.0, 15.9, 15.8,
-]
-
-const CONSULTAS = [
-  341_200, 352_400, 361_900, 373_800, 386_400, 395_100, 402_700, 414_800, 426_500,
-  439_700, 451_800, 465_000, 480_400, 498_200, 515_700, 531_800, 540_300, 546_700, 551_974,
-]
-
-const BIRTHS = [
-  56_900, 56_200, 55_300, 54_500, 53_900, 53_000, 52_300, 51_700, 51_100,
-  50_700, 50_100, 49_600, 49_000, 48_700, 48_400, 48_000, 47_600, 47_300, 46_797,
-]
-
-const YEAR_DATA: YearDatum[] = YEARS.map((year, index) => ({
-  year,
-  natalidadeAl: NATALIDADE_AL[index],
-  natalidadeBr: NATALIDADE_BR[index],
-  mortalidadeMaterna: MORTALIDADE_MATERNA[index],
-  mortalidadeInfantil: MORTALIDADE_INFANTIL[index],
-  consultas: CONSULTAS[index],
-  births: BIRTHS[index],
-}))
-
-const PRESETS: Record<PresetKey, [number, number]> = {
-  full: [0, YEAR_DATA.length - 1],
-  p1: [0, 7],
-  p2: [8, YEAR_DATA.length - 1],
-  custom: [0, YEAR_DATA.length - 1],
+type Payload = {
+  meta: {
+    state: string
+    focus: string
+    source: string
+    generated_at: string
+    total_raw_candidates: number
+    total_leads: number
+  }
+  leads: Lead[]
 }
 
-const FOCUS_LABELS: Record<FocusKey, string> = {
-  natalidade: 'Taxa de natalidade',
-  materna: 'Razão de mortalidade materna',
-  infantil: 'Mortalidade infantil',
+const money = new Intl.NumberFormat('pt-BR')
+
+function segmentLabel(lead: Lead) {
+  const name = `${lead.name} ${(lead.shop || '')} ${(lead.office || '')}`.toLowerCase()
+  if (name.includes('home center')) return 'Home center'
+  if (name.includes('casa da construção') || name.includes('casa e construção')) return 'Casa de construção'
+  if (name.includes('material de construção') || name.includes('materiais de construção')) return 'Material de construção'
+  if (name.includes('madeireira')) return 'Madeireira'
+  if (name.includes('tintas') || name.includes('paint')) return 'Tintas'
+  if (name.includes('construtora') || name.includes('construções') || name.includes('construcoes')) return 'Construtora'
+  if (lead.office === 'construction_company') return 'Construtora'
+  if (lead.shop === 'hardware' || lead.shop === 'doityourself') return 'Ferragens / acabamento'
+  return 'Obra e infraestrutura'
 }
 
-function formatNumber(value: number, digits = 0) {
-  return new Intl.NumberFormat('pt-BR', {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: digits,
-  }).format(value)
+function scoreLabel(score: number) {
+  if (score >= 60) return 'Alta'
+  if (score >= 40) return 'Média'
+  return 'Baixa'
 }
 
-function formatPercent(value: number) {
-  return `${value >= 0 ? '+' : ''}${formatNumber(value, 1)}%`
-}
+function downloadCsv(leads: Lead[]) {
+  const headers = ['nome', 'cidade', 'estado', 'score', 'tier', 'fit', 'segmento', 'telefone', 'site', 'maps']
+  const rows = leads.map((lead) => [
+    lead.name,
+    lead.city || '',
+    lead.state,
+    String(lead.score),
+    lead.tier,
+    lead.fit,
+    segmentLabel(lead),
+    lead.phone || '',
+    lead.website || '',
+    lead.google_maps_url,
+  ])
+  const csv = [headers, ...rows]
+    .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(','))
+    .join('\n')
 
-function average(values: number[]) {
-  return values.reduce((sum, value) => sum + value, 0) / Math.max(values.length, 1)
-}
-
-function sum(values: number[]) {
-  return values.reduce((total, value) => total + value, 0)
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value))
-}
-
-function makeLinePoints(values: number[], width: number, height: number, padding = 28) {
-  const min = Math.min(...values)
-  const max = Math.max(...values)
-  const spread = Math.max(max - min, 0.0001)
-  const innerWidth = width - padding * 2
-  const innerHeight = height - padding * 2
-  const stepX = values.length > 1 ? innerWidth / (values.length - 1) : innerWidth
-
-  return values.map((value, index) => {
-    const x = padding + index * stepX
-    const y = padding + innerHeight - ((value - min) / spread) * innerHeight
-    return { x, y, value }
-  })
-}
-
-function makeLinePath(points: Array<{ x: number; y: number }>) {
-  return points
-    .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`)
-    .join(' ')
-}
-
-function makeAreaPath(points: Array<{ x: number; y: number }>, height: number, padding = 28) {
-  if (!points.length) return ''
-  const baseline = height - padding
-  const first = points[0]
-  const last = points[points.length - 1]
-  return `${makeLinePath(points)} L ${last.x.toFixed(2)} ${baseline} L ${first.x.toFixed(2)} ${baseline} Z`
-}
-
-function signedDelta(current: number, previous: number) {
-  if (!previous) return 0
-  return ((current - previous) / previous) * 100
-}
-
-function metricTone(value: number, inverted = false) {
-  if (value === 0) return 'neutral'
-  const positive = inverted ? value < 0 : value > 0
-  return positive ? 'good' : 'bad'
-}
-
-function MiniDial({
-  label,
-  value,
-  target,
-  unit,
-  tone = 'good',
-}: {
-  label: string
-  value: number
-  target: number
-  unit: string
-  tone?: 'good' | 'warn' | 'bad'
-}) {
-  const max = Math.max(target * 1.15, value * 1.05)
-  const progress = clamp((value / max) * 100, 8, 100)
-  return (
-    <div className={`mini-dial mini-dial--${tone}`}>
-      <div
-        className="mini-dial__ring"
-        style={{
-          background: `conic-gradient(var(--dial-accent) ${progress}%, rgba(15, 23, 42, 0.08) ${progress}% 100%)`,
-        }}
-        aria-hidden="true"
-      >
-        <div className="mini-dial__core">
-          <strong>{formatNumber(value, value < 100 ? 2 : 0)}</strong>
-          <span>{unit}</span>
-        </div>
-      </div>
-      <div className="mini-dial__meta">
-        <span>{label}</span>
-        <small>Meta / referência: {formatNumber(target, target < 100 ? 2 : 0)}{unit}</small>
-      </div>
-    </div>
-  )
-}
-
-function MetricCard({
-  label,
-  value,
-  delta,
-  deltaLabel,
-  note,
-  tone = 'neutral',
-}: {
-  label: string
-  value: string
-  delta: string
-  deltaLabel: string
-  note: string
-  tone?: 'neutral' | 'good' | 'bad' | 'warn'
-}) {
-  return (
-    <article className={`metric-card metric-card--${tone}`}>
-      <div className="metric-card__label">{label}</div>
-      <div className="metric-card__value">{value}</div>
-      <div className="metric-card__delta">
-        <strong>{delta}</strong>
-        <span>{deltaLabel}</span>
-      </div>
-      <p>{note}</p>
-    </article>
-  )
-}
-
-function ChartFrame({
-  eyebrow,
-  title,
-  subtitle,
-  children,
-  action,
-}: {
-  eyebrow: string
-  title: string
-  subtitle: string
-  children: ReactNode
-  action?: ReactNode
-}) {
-  return (
-    <section className="panel chart-frame">
-      <div className="chart-frame__header">
-        <div>
-          <div className="eyebrow">{eyebrow}</div>
-          <h2>{title}</h2>
-          <p>{subtitle}</p>
-        </div>
-        {action ? <div className="chart-frame__action">{action}</div> : null}
-      </div>
-      {children}
-    </section>
-  )
-}
-
-function ComparisonBar({
-  label,
-  value,
-  reference,
-  accent,
-}: {
-  label: string
-  value: number
-  reference: number
-  accent: string
-}) {
-  const max = Math.max(value, reference) * 1.1
-  const valueWidth = (value / max) * 100
-  const referenceWidth = (reference / max) * 100
-  return (
-    <div className="comparison-bar">
-      <div className="comparison-bar__copy">
-        <span>{label}</span>
-        <strong>{formatNumber(value, 2)}</strong>
-      </div>
-      <div className="comparison-bar__track">
-        <div className="comparison-bar__reference" style={{ width: `${referenceWidth}%` }} />
-        <div className="comparison-bar__value" style={{ width: `${valueWidth}%`, background: accent }} />
-      </div>
-      <small>Base de comparação: {formatNumber(reference, 2)}</small>
-    </div>
-  )
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'leads-alagoas-construcao.csv'
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 function App() {
-  const [preset, setPreset] = useState<PresetKey>('full')
-  const [rangeStart, setRangeStart] = useState(PRESETS.full[0])
-  const [rangeEnd, setRangeEnd] = useState(PRESETS.full[1])
-  const [focus, setFocus] = useState<FocusKey>('natalidade')
+  const [payload, setPayload] = useState<Payload | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
+  const [city, setCity] = useState('')
+  const [tier, setTier] = useState<'all' | 'A' | 'B' | 'C'>('all')
+  const [minScore, setMinScore] = useState(0)
+  const [sortBy, setSortBy] = useState<'score' | 'name' | 'city'>('score')
 
-  const visible = useMemo(() => {
-    const start = Math.min(rangeStart, rangeEnd)
-    const end = Math.max(rangeStart, rangeEnd)
-    return YEAR_DATA.slice(start, end + 1)
-  }, [rangeStart, rangeEnd])
+  useEffect(() => {
+    let mounted = true
+    fetch('/leads.json')
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Falha ao carregar leads (${res.status})`)
+        return (await res.json()) as Payload
+      })
+      .then((data) => {
+        if (!mounted) return
+        setPayload(data)
+      })
+      .catch((err: unknown) => {
+        if (!mounted) return
+        setError(err instanceof Error ? err.message : 'Erro ao carregar os dados')
+      })
+      .finally(() => {
+        if (!mounted) return
+        setLoading(false)
+      })
 
-  const p1 = useMemo(() => YEAR_DATA.slice(0, 8), [])
-  const p2 = useMemo(() => YEAR_DATA.slice(8), [])
+    return () => {
+      mounted = false
+    }
+  }, [])
 
-  const totalBirths = sum(visible.map((item) => item.births))
-  const avgMaterna = average(visible.map((item) => item.mortalidadeMaterna))
-  const avgInfantil = average(visible.map((item) => item.mortalidadeInfantil))
-  const consultasLatest = visible[visible.length - 1]?.consultas ?? 0
-  const natalidadeAvg = average(visible.map((item) => item.natalidadeAl))
-  const natalidadePrev = average(visible.map((item) => item.natalidadeBr))
+  const leads = useMemo(() => payload?.leads ?? [], [payload])
+  const cities = useMemo(() => {
+    return Array.from(new Set(leads.map((lead) => lead.city?.trim()).filter(Boolean) as string[])).sort()
+  }, [leads])
 
-  const firstPeriod = average(p1.map((item) => item.natalidadeAl))
-  const secondPeriod = average(p2.map((item) => item.natalidadeAl))
-  const firstMaterna = average(p1.map((item) => item.mortalidadeMaterna))
-  const secondMaterna = average(p2.map((item) => item.mortalidadeMaterna))
-  const firstInfantil = average(p1.map((item) => item.mortalidadeInfantil))
-  const secondInfantil = average(p2.map((item) => item.mortalidadeInfantil))
+  const stats = useMemo(() => {
+    const valid = leads.filter((lead) => lead.score >= minScore)
+    return {
+      total: leads.length,
+      a: leads.filter((lead) => lead.tier === 'A').length,
+      withPhone: leads.filter((lead) => lead.phone).length,
+      withWebsite: leads.filter((lead) => lead.website).length,
+      highFit: leads.filter((lead) => lead.fit === 'alto').length,
+      filtered: valid.length,
+    }
+  }, [leads, minScore])
 
-  const startYear = visible[0]?.year ?? YEAR_DATA[0].year
-  const endYear = visible[visible.length - 1]?.year ?? YEAR_DATA[YEAR_DATA.length - 1].year
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    let next = [...leads]
 
-  const natalidadeDelta = signedDelta(secondPeriod, firstPeriod)
-  const maternaDelta = signedDelta(secondMaterna, firstMaterna)
-  const infantilDelta = signedDelta(secondInfantil, firstInfantil)
-  const consultasDelta = signedDelta(consultasLatest, visible[0]?.consultas ?? consultasLatest)
+    if (q) {
+      next = next.filter((lead) => {
+        const hay = [lead.name, lead.city, lead.shop, lead.office, segmentLabel(lead), lead.phone, lead.website]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+        return hay.includes(q)
+      })
+    }
 
-  const natalidadePoints = useMemo(() => makeLinePoints(visible.map((item) => item.natalidadeAl), 760, 320), [visible])
-  const natalidadeBrPoints = useMemo(() => makeLinePoints(visible.map((item) => item.natalidadeBr), 760, 320), [visible])
-  const infantilPoints = useMemo(() => makeLinePoints(visible.map((item) => item.mortalidadeInfantil), 760, 260), [visible])
+    if (city) {
+      next = next.filter((lead) => (lead.city || '').toLowerCase() === city.toLowerCase())
+    }
 
-  const natalidadeArea = makeAreaPath(natalidadePoints, 320)
-  const natalidadeBrArea = makeAreaPath(natalidadeBrPoints, 320)
-  const maternaBars = visible.map((item) => item.mortalidadeMaterna)
+    if (tier !== 'all') {
+      next = next.filter((lead) => lead.tier === tier)
+    }
 
-  const presetRange = (key: PresetKey) => {
-    const [start, end] = PRESETS[key]
-    setPreset(key)
-    setRangeStart(start)
-    setRangeEnd(end)
+    next = next.filter((lead) => lead.score >= minScore)
+
+    next.sort((a, b) => {
+      if (sortBy === 'name') return a.name.localeCompare(b.name, 'pt-BR')
+      if (sortBy === 'city') return (a.city || '').localeCompare(b.city || '', 'pt-BR') || b.score - a.score
+      return b.score - a.score || a.name.localeCompare(b.name, 'pt-BR')
+    })
+
+    return next
+  }, [leads, search, city, tier, minScore, sortBy])
+
+  if (loading) {
+    return (
+      <main className="page-shell center-state">
+        <div className="loading-card">
+          <p className="eyebrow">Radar Comercial Alagoas</p>
+          <h1>Carregando os leads públicos…</h1>
+          <p>Estou preparando a lista de construtoras, casas de construção, depósitos e madeireiras.</p>
+        </div>
+      </main>
+    )
   }
 
-  const onRangeChange = (setter: (value: number) => void) => (event: ChangeEvent<HTMLInputElement>) => {
-    setPreset('custom')
-    setter(Number(event.target.value))
+  if (error) {
+    return (
+      <main className="page-shell center-state">
+        <div className="loading-card error">
+          <p className="eyebrow">Erro de carregamento</p>
+          <h1>Não consegui abrir a base de leads</h1>
+          <p>{error}</p>
+        </div>
+      </main>
+    )
   }
 
   return (
-    <main className="app-shell">
-      <div className="page-shell">
-        <header className="hero panel">
-          <div className="hero__topbar">
-            <div className="brand-pill">
-              <span className="brand-pill__dot" />
-              SECRIA · Painel estratégico
-            </div>
-            <div className="hero__logos" aria-label="Identidade institucional">
-              <span>ALAGOAS</span>
-              <span>secretaria de estado</span>
-              <span>cria</span>
-            </div>
+    <main className="page-shell">
+      <section className="hero-card">
+        <div className="hero-top">
+          <div>
+            <p className="eyebrow">Radar Comercial Alagoas</p>
+            <h1>Leads de construção em Alagoas, com foco no que realmente compra obra.</h1>
+            <p className="hero-copy">
+              Base pública de prospecção para construtoras, depósitos, madeireiras, home centers e casas de
+              construção. A ideia é enxergar oportunidade, filtrar rápido e sair com lista pronta para abordagem.
+            </p>
           </div>
+          <div className="hero-badge">
+            <span>{payload?.meta.state}</span>
+            <strong>{money.format(payload?.meta.total_leads || 0)}</strong>
+            <small>leads na base</small>
+          </div>
+        </div>
 
-          <div className="hero__main">
-            <div className="hero__copy">
-              <div className="eyebrow">Diagnóstico gerencial</div>
-              <h1>Diagnóstico Gerencial da Primeira Infância de Alagoas</h1>
-              <p>
-                Monitoramento executivo de 2007 a 2025 com leitura rápida de nascidos vivos,
-                razão de mortalidade materna, taxa de mortalidade infantil e consultas pré-natal.
+        <div className="stats-grid">
+          <article>
+            <span>Total bruto</span>
+            <strong>{money.format(stats.total)}</strong>
+          </article>
+          <article>
+            <span>Tier A</span>
+            <strong>{money.format(stats.a)}</strong>
+          </article>
+          <article>
+            <span>Com telefone</span>
+            <strong>{money.format(stats.withPhone)}</strong>
+          </article>
+          <article>
+            <span>Com site</span>
+            <strong>{money.format(stats.withWebsite)}</strong>
+          </article>
+          <article>
+            <span>Alta aderência</span>
+            <strong>{money.format(stats.highFit)}</strong>
+          </article>
+          <article>
+            <span>Após filtros</span>
+            <strong>{money.format(stats.filtered)}</strong>
+          </article>
+        </div>
+
+        <div className="hero-actions">
+          <a className="primary-button" href="#lista">Ver leads</a>
+          <button className="secondary-button" type="button" onClick={() => downloadCsv(filtered)}>
+            Baixar CSV filtrado
+          </button>
+          <a className="secondary-button" href="https://www.google.com/maps" target="_blank" rel="noreferrer">
+            Abrir Google Maps
+          </a>
+        </div>
+
+        <p className="hero-meta">
+          Fonte: {payload?.meta.source} · gerado em {payload?.meta.generated_at} · foco em {payload?.meta.focus}.
+        </p>
+      </section>
+
+      <section className="filters-card">
+        <div className="filters-row">
+          <label>
+            <span>Buscar</span>
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nome, cidade, segmento…" />
+          </label>
+          <label>
+            <span>Cidade</span>
+            <select value={city} onChange={(e) => setCity(e.target.value)}>
+              <option value="">Todo o estado</option>
+              {cities.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>Tier</span>
+            <select value={tier} onChange={(e) => setTier(e.target.value as typeof tier)}>
+              <option value="all">Todos</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+            </select>
+          </label>
+          <label>
+            <span>Score mínimo</span>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={minScore}
+              onChange={(e) => setMinScore(Number(e.target.value))}
+            />
+            <strong>{minScore}</strong>
+          </label>
+          <label>
+            <span>Ordenar por</span>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}>
+              <option value="score">Score</option>
+              <option value="name">Nome</option>
+              <option value="city">Cidade</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section className="summary-strip">
+        <div>
+          <strong>{filtered.length}</strong>
+          <span>leads visíveis</span>
+        </div>
+        <div>
+          <strong>{cities.length}</strong>
+          <span>cidades na base</span>
+        </div>
+        <div>
+          <strong>{scoreLabel(Math.max(...filtered.map((lead) => lead.score), 0))}</strong>
+          <span>melhor oportunidade</span>
+        </div>
+      </section>
+
+      <section className="list-wrap" id="lista">
+        <div className="section-head">
+          <div>
+            <p className="eyebrow">Lista operacional</p>
+            <h2>Top leads para prospecção</h2>
+          </div>
+          <p>
+            Dica: os leads com score mais alto tendem a ter melhor fit para obra, revenda ou suprimento de materiais.
+          </p>
+        </div>
+
+        <div className="lead-grid">
+          {filtered.map((lead, index) => (
+            <article className="lead-card" key={`${lead.name}-${lead.lat}-${lead.lon}`}>
+              <div className="lead-top">
+                <div>
+                  <p className="rank">#{index + 1}</p>
+                  <h3>{lead.name}</h3>
+                  <p className="segment">{segmentLabel(lead)}</p>
+                </div>
+                <div className={`score-pill tier-${lead.tier}`}>
+                  <strong>{lead.score}</strong>
+                  <span>{lead.tier}</span>
+                </div>
+              </div>
+
+              <div className="lead-meta">
+                <span>{lead.city || 'Cidade não informada'}</span>
+                <span>{lead.state}</span>
+                <span>Fit {lead.fit}</span>
+              </div>
+
+              <p className="lead-note">
+                {lead.opening_hours ? `Horário público: ${lead.opening_hours}` : 'Sem horário público informado.'}
               </p>
-            </div>
 
-            <div className="hero__stats">
-              <div>
-                <span>Período ativo</span>
-                <strong>{startYear}–{endYear}</strong>
-              </div>
-              <div>
-                <span>Escopo</span>
-                <strong>Alagoas</strong>
-              </div>
-              <div>
-                <span>Base</span>
-                <strong>2007–2025</strong>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <section className="panel controls-panel">
-          <div className="controls-panel__header">
-            <div>
-              <div className="eyebrow">Recorte analítico</div>
-              <h2>Filtrar o período e o foco principal do painel</h2>
-            </div>
-            <div className="controls-panel__meta">
-              <span>{visible.length} anos selecionados</span>
-              <strong>{formatNumber(totalBirths)} nascidos vivos</strong>
-            </div>
-          </div>
-
-          <div className="preset-row">
-            <button className={preset === 'p1' ? 'chip chip--active' : 'chip'} onClick={() => presetRange('p1')}>2007–2014</button>
-            <button className={preset === 'p2' ? 'chip chip--active' : 'chip'} onClick={() => presetRange('p2')}>2015–2025</button>
-            <button className={preset === 'full' ? 'chip chip--active' : 'chip'} onClick={() => presetRange('full')}>2007–2025</button>
-            <button className={preset === 'custom' ? 'chip chip--active' : 'chip'} onClick={() => presetRange('custom')}>Recorte livre</button>
-          </div>
-
-          <div className="range-grid">
-            <label>
-              <span>Ano inicial</span>
-              <input type="range" min={0} max={YEAR_DATA.length - 1} value={rangeStart} onChange={onRangeChange(setRangeStart)} />
-              <strong>{YEAR_DATA[rangeStart]?.year}</strong>
-            </label>
-            <label>
-              <span>Ano final</span>
-              <input type="range" min={0} max={YEAR_DATA.length - 1} value={rangeEnd} onChange={onRangeChange(setRangeEnd)} />
-              <strong>{YEAR_DATA[rangeEnd]?.year}</strong>
-            </label>
-            <label>
-              <span>Indicador em destaque</span>
-              <select value={focus} onChange={(event) => setFocus(event.target.value as FocusKey)}>
-                <option value="natalidade">Taxa de natalidade</option>
-                <option value="materna">Razão de mortalidade materna</option>
-                <option value="infantil">Mortalidade infantil</option>
-              </select>
-            </label>
-          </div>
-        </section>
-
-        <section className="kpi-grid">
-          <MetricCard
-            label="Nascidos vivos"
-            value={formatNumber(totalBirths)}
-            delta={formatPercent(signedDelta(totalBirths, sum(YEAR_DATA.map((item) => item.births))))}
-            deltaLabel="vs. base histórica"
-            note="Acumulado do recorte ativo com leitura rápida do volume de nascimentos."
-            tone="neutral"
-          />
-          <MetricCard
-            label="Razão agregada de mortalidade materna"
-            value={formatNumber(avgMaterna, 2)}
-            delta={maternaDelta < 0 ? formatPercent(maternaDelta) : `+${formatNumber(maternaDelta, 1)}%`}
-            deltaLabel="P2 vs P1"
-            note="Mostra a pressão relativa sobre a série histórica e o comportamento entre períodos."
-            tone={metricTone(maternaDelta, true)}
-          />
-          <MetricCard
-            label="Taxa de mortalidade infantil"
-            value={formatNumber(avgInfantil, 2)}
-            delta={infantilDelta < 0 ? formatPercent(infantilDelta) : `+${formatNumber(infantilDelta, 1)}%`}
-            deltaLabel="P2 vs P1"
-            note="Indicador sensível à qualidade assistencial e ao acompanhamento pós-natal."
-            tone={metricTone(infantilDelta, true)}
-          />
-          <MetricCard
-            label="Consultas pré-natal 7+"
-            value={formatNumber(consultasLatest)}
-            delta={formatPercent(consultasDelta)}
-            deltaLabel="crescimento do recorte"
-            note="Leitura de cobertura assistencial e adesão às consultas recomendadas."
-            tone="good"
-          />
-        </section>
-
-        <section className="workspace-grid">
-          <div className="workspace-grid__main">
-            <ChartFrame
-              eyebrow="Série temporal principal"
-              title={FOCUS_LABELS[focus]}
-              subtitle="Comparativo visual entre Alagoas e a referência nacional, com leitura limiar e tendência de médio prazo."
-              action={<span className="chart-chip">{startYear} → {endYear}</span>}
-            >
-              <div className="chart-legend">
-                <span><i className="legend legend--al" /> Alagoas</span>
-                <span><i className="legend legend--br" /> Brasil</span>
+              <div className="tag-row">
+                {lead.shop && <span className="tag">shop={lead.shop}</span>}
+                {lead.office && <span className="tag">office={lead.office}</span>}
+                {lead.source?.map((src) => (
+                  <span className="tag" key={src}>
+                    {src}
+                  </span>
+                ))}
               </div>
 
-              <div className="chart-shell chart-shell--large">
-                <svg viewBox="0 0 760 320" role="img" aria-label="Gráfico de linhas da taxa de natalidade">
-                  <defs>
-                    <linearGradient id="areaAl" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="rgba(14, 116, 144, 0.26)" />
-                      <stop offset="100%" stopColor="rgba(14, 116, 144, 0.04)" />
-                    </linearGradient>
-                    <linearGradient id="areaBr" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="rgba(109, 40, 217, 0.18)" />
-                      <stop offset="100%" stopColor="rgba(109, 40, 217, 0.03)" />
-                    </linearGradient>
-                  </defs>
-                  {[0, 1, 2, 3, 4].map((tick) => {
-                    const y = 28 + ((320 - 56) / 4) * tick
-                    return <line key={tick} x1="28" y1={y} x2="732" y2={y} className="chart-grid" />
-                  })}
-                  {natalidadeArea ? <path d={natalidadeArea} fill="url(#areaAl)" /> : null}
-                  {natalidadeBrArea ? <path d={natalidadeBrArea} fill="url(#areaBr)" /> : null}
-                  <path d={makeLinePath(natalidadeBrPoints)} className="chart-line chart-line--br" />
-                  <path d={makeLinePath(natalidadePoints)} className="chart-line chart-line--al" />
-                  {natalidadePoints.map((point, index) => (
-                    <circle key={`al-${visible[index]?.year}`} cx={point.x} cy={point.y} r="3.8" className="chart-dot chart-dot--al" />
-                  ))}
-                  {natalidadeBrPoints.map((point, index) => (
-                    <circle key={`br-${visible[index]?.year}`} cx={point.x} cy={point.y} r="3" className="chart-dot chart-dot--br" />
-                  ))}
-                  {visible.map((item, index) => {
-                    if (index % 3 !== 0 && index !== visible.length - 1) return null
-                    const point = natalidadePoints[index]
-                    return (
-                      <g key={item.year}>
-                        <line x1={point.x} y1="290" x2={point.x} y2="296" className="chart-tick" />
-                        <text x={point.x} y="312" textAnchor="middle" className="chart-label">{item.year}</text>
-                      </g>
-                    )
-                  })}
-                </svg>
+              <div className="lead-actions">
+                <a href={lead.google_maps_url} target="_blank" rel="noreferrer">
+                  Abrir no Maps
+                </a>
+                {lead.website && (
+                  <a href={lead.website} target="_blank" rel="noreferrer">
+                    Site
+                  </a>
+                )}
+                {lead.phone_link && (
+                  <a href={lead.phone_link}>
+                    Ligar
+                  </a>
+                )}
               </div>
+            </article>
+          ))}
+        </div>
+      </section>
 
-              <div className="chart-footer">
-                <div>
-                  <span>Média selecionada</span>
-                  <strong>{formatNumber(natalidadeAvg, 2)}</strong>
-                </div>
-                <div>
-                  <span>Referência Brasil</span>
-                  <strong>{formatNumber(natalidadePrev, 2)}</strong>
-                </div>
-                <div>
-                  <span>Variação P2 vs P1</span>
-                  <strong className={natalidadeDelta < 0 ? 'text-good' : 'text-bad'}>
-                    {formatPercent(natalidadeDelta)}
-                  </strong>
-                </div>
-              </div>
-            </ChartFrame>
-
-            <div className="double-grid">
-              <ChartFrame
-                eyebrow="Monitoramento hospitalar e territorial"
-                title="Razão de mortalidade materna"
-                subtitle="Barra por ano com destaque visual para picos e convergência com a meta ODS."
-              >
-                <div className="chart-shell chart-shell--bar">
-                  <svg viewBox="0 0 760 300" role="img" aria-label="Gráfico de barras da razão de mortalidade materna">
-                    {[0, 1, 2, 3, 4].map((tick) => {
-                      const y = 30 + ((300 - 70) / 4) * tick
-                      return <line key={tick} x1="32" y1={y} x2="728" y2={y} className="chart-grid" />
-                    })}
-                    {visible.map((item, index) => {
-                      const max = Math.max(...maternaBars)
-                      const barHeight = ((item.mortalidadeMaterna / max) * 210) + 8
-                      const x = 44 + index * ((760 - 88) / Math.max(visible.length, 1))
-                      const y = 252 - barHeight
-                      return (
-                        <g key={item.year}>
-                          <rect
-                            x={x}
-                            y={y}
-                            width={Math.max(20, (760 - 88) / Math.max(visible.length, 1) - 4)}
-                            height={barHeight}
-                            rx="10"
-                            className={item.mortalidadeMaterna >= 70 ? 'bar bar--peak' : 'bar'}
-                          />
-                          <text x={x + 10} y={Math.max(y - 6, 24)} textAnchor="middle" className="chart-value">{formatNumber(item.mortalidadeMaterna, 1)}</text>
-                          {index % 3 === 0 || index === visible.length - 1 ? (
-                            <text x={x + 10} y="286" textAnchor="middle" className="chart-label">{item.year}</text>
-                          ) : null}
-                        </g>
-                      )
-                    })}
-                  </svg>
-                </div>
-                <div className="chart-footer">
-                  <div>
-                    <span>Média P1</span>
-                    <strong>{formatNumber(firstMaterna, 2)}</strong>
-                  </div>
-                  <div>
-                    <span>Média P2</span>
-                    <strong>{formatNumber(secondMaterna, 2)}</strong>
-                  </div>
-                  <div>
-                    <span>Leitura</span>
-                    <strong className={maternaDelta < 0 ? 'text-good' : 'text-warn'}>
-                      {maternaDelta < 0 ? 'Alívio relativo' : 'Oscilação crítica'}
-                    </strong>
-                  </div>
-                </div>
-              </ChartFrame>
-
-              <ChartFrame
-                eyebrow="Taxa sensível à atenção básica"
-                title="Mortalidade infantil"
-                subtitle="Linha contínua para verificar se o avanço do cuidado pré-natal aparece também no pós-parto."
-              >
-                <div className="chart-shell chart-shell--small">
-                  <svg viewBox="0 0 760 260" role="img" aria-label="Gráfico de linhas da mortalidade infantil">
-                    {[0, 1, 2, 3].map((tick) => {
-                      const y = 28 + ((260 - 56) / 3) * tick
-                      return <line key={tick} x1="28" y1={y} x2="732" y2={y} className="chart-grid" />
-                    })}
-                    {infantilPoints.length ? <path d={makeLinePath(infantilPoints)} className="chart-line chart-line--infant" /> : null}
-                    {infantilPoints.map((point, index) => (
-                      <circle key={`inf-${visible[index]?.year}`} cx={point.x} cy={point.y} r="3.6" className="chart-dot chart-dot--infant" />
-                    ))}
-                    {visible.map((item, index) => {
-                      if (index % 3 !== 0 && index !== visible.length - 1) return null
-                      const point = infantilPoints[index]
-                      return (
-                        <g key={item.year}>
-                          <line x1={point.x} y1="228" x2={point.x} y2="234" className="chart-tick" />
-                          <text x={point.x} y="246" textAnchor="middle" className="chart-label">{item.year}</text>
-                        </g>
-                      )
-                    })}
-                  </svg>
-                </div>
-                <div className="chart-footer">
-                  <div>
-                    <span>Média P1</span>
-                    <strong>{formatNumber(firstInfantil, 2)}</strong>
-                  </div>
-                  <div>
-                    <span>Média P2</span>
-                    <strong>{formatNumber(secondInfantil, 2)}</strong>
-                  </div>
-                  <div>
-                    <span>Tendência</span>
-                    <strong className={infantilDelta < 0 ? 'text-good' : 'text-warn'}>
-                      {infantilDelta < 0 ? 'Descendente' : 'Ascendente'}
-                    </strong>
-                  </div>
-                </div>
-              </ChartFrame>
-            </div>
-          </div>
-
-          <aside className="workspace-grid__side">
-            <section className="panel side-panel side-panel--focus">
-              <div className="eyebrow">Comparativo do período</div>
-              <h2>Leitura executiva entre as duas fases</h2>
-              <p>Os dials abaixo espelham o comportamento médio do indicador em cada ciclo do painel.</p>
-              <div className="dial-grid">
-                <MiniDial label="Taxa de natalidade · P1" value={firstPeriod} target={17.04} unit="" tone="good" />
-                <MiniDial label="Taxa de natalidade · P2" value={secondPeriod} target={14.71} unit="" tone="good" />
-              </div>
-              <ComparisonBar label="Natalidade média" value={secondPeriod} reference={firstPeriod} accent="linear-gradient(135deg, #0e7490, #14b8a6)" />
-              <ComparisonBar label="Mortalidade materna" value={secondMaterna} reference={firstMaterna} accent="linear-gradient(135deg, #b45309, #f97316)" />
-              <ComparisonBar label="Mortalidade infantil" value={secondInfantil} reference={firstInfantil} accent="linear-gradient(135deg, #4f46e5, #7c3aed)" />
-            </section>
-
-            <section className="panel side-panel">
-              <div className="eyebrow">Notas inteligentes</div>
-              <h2>O que o painel sugere hoje</h2>
-              <ul className="insight-list">
-                <li>
-                  <strong>Queda estrutural da natalidade:</strong> o período mais recente opera abaixo do ciclo inicial, sugerindo mudança demográfica e pressão menor sobre o volume absoluto de nascimentos.
-                </li>
-                <li>
-                  <strong>Picos críticos de mortalidade materna:</strong> os anos de ruptura chamam atenção para revisão de rede, fluxos e resolutividade hospitalar.
-                </li>
-                <li>
-                  <strong>Pré-natal em avanço:</strong> o crescimento de consultas reforça a importância da busca ativa e do acompanhamento gestacional.
-                </li>
-              </ul>
-            </section>
-
-            <section className="panel side-panel">
-              <div className="eyebrow">Metas e leitura rápida</div>
-              <h2>Resumo operacional</h2>
-              <div className="summary-grid">
-                <div>
-                  <span>Meta ODS</span>
-                  <strong>&lt;= 30</strong>
-                </div>
-                <div>
-                  <span>RMM agregada</span>
-                  <strong>{formatNumber(avgMaterna, 2)}</strong>
-                </div>
-                <div>
-                  <span>TMI agregada</span>
-                  <strong>{formatNumber(avgInfantil, 2)}</strong>
-                </div>
-                <div>
-                  <span>Consultas 7+</span>
-                  <strong>{formatNumber(consultasLatest)}</strong>
-                </div>
-              </div>
-              <div className="summary-footnote">
-                Painel desenhado para leitura rápida, com contraste forte, densidade executiva e adaptação mobile-first.
-              </div>
-            </section>
-          </aside>
-        </section>
-      </div>
+      <footer className="footer-note">
+        <p>
+          Dados públicos de OpenStreetMap/Nominatim. Use como base comercial inicial e valide telefone, cidade e
+          operação antes do contato.
+        </p>
+      </footer>
     </main>
   )
 }
