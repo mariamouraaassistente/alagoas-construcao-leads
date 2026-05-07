@@ -306,14 +306,61 @@ function stateAccent(record: HotelRecord) {
   return record.state_code === 'AL' ? 'var(--accent-gold)' : 'var(--accent-ocean)'
 }
 
-function scenicFallbacks(record: HotelRecord) {
-  const city = encodeURIComponent(normalizeText(record.city || record.state_name).replace(/\s/g, '+'))
-  const state = record.state_code === 'AL' ? 'alagoas' : 'bahia'
-  return [
-    `https://source.unsplash.com/featured/1600x1200/?${city},hotel,travel`,
-    `https://source.unsplash.com/featured/1600x1200/?${state},coast,hotel`,
-    `https://source.unsplash.com/featured/1600x1200/?${state},beach,resort`,
-  ]
+function escapeXml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+}
+
+function buildFallbackPhotoDataUri(record: HotelRecord, variant: 'hero' | 'thumb-a' | 'thumb-b') {
+  const isAl = record.state_code === 'AL'
+  const gradients = isAl
+    ? {
+        base: variant === 'hero' ? ['#0f172a', '#134e4a'] : variant === 'thumb-a' ? ['#155e75', '#0ea5e9'] : ['#7c3aed', '#4c1d95'],
+        accent: ['#f59e0b', '#fbbf24'],
+      }
+    : {
+        base: variant === 'hero' ? ['#111827', '#3b82f6'] : variant === 'thumb-a' ? ['#0c4a6e', '#2563eb'] : ['#7c3aed', '#9333ea'],
+        accent: ['#10b981', '#34d399'],
+      }
+  const title = escapeXml(record.name.length > 30 ? `${record.name.slice(0, 30).trim()}…` : record.name)
+  const location = escapeXml([record.city || record.state_name, record.state_code].filter(Boolean).join(' · '))
+  const badge = escapeXml(`${record.tier} • ${record.score.toFixed(0)}`)
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" role="img" aria-label="${title}">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          ${gradients.base.map((color, index) => `<stop offset="${index === 0 ? 0 : 100}%" stop-color="${color}"/>`).join('')}
+        </linearGradient>
+        <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="#ffffff" stop-opacity="0.02"/>
+        </linearGradient>
+      </defs>
+      <rect width="1600" height="1200" rx="56" fill="url(#bg)"/>
+      <circle cx="1320" cy="180" r="220" fill="${gradients.accent[0]}" fill-opacity="0.22"/>
+      <circle cx="1360" cy="900" r="320" fill="${gradients.accent[1]}" fill-opacity="0.18"/>
+      <path d="M0 860 C 240 760, 360 1100, 640 980 C 920 860, 1060 560, 1360 620 C 1480 645, 1550 690, 1600 740 L 1600 1200 L 0 1200 Z" fill="url(#shine)"/>
+      <path d="M0 930 C 260 820, 430 1180, 720 1040 C 980 915, 1120 650, 1600 780" fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-width="18" stroke-linecap="round"/>
+      <g transform="translate(90 96)">
+        <rect x="0" y="0" width="220" height="68" rx="34" fill="#ffffff" fill-opacity="0.14" stroke="#ffffff" stroke-opacity="0.18"/>
+        <text x="32" y="44" fill="#fff" font-size="28" font-family="Inter, Arial, sans-serif" font-weight="700">${badge}</text>
+      </g>
+      <g transform="translate(90 260)">
+        <text x="0" y="0" fill="#fff" font-size="64" font-family="Fraunces, Georgia, serif" font-weight="700">${title}</text>
+        <text x="0" y="76" fill="#fff" fill-opacity="0.88" font-size="34" font-family="Inter, Arial, sans-serif" font-weight="500">${location}</text>
+      </g>
+      <g transform="translate(90 950)">
+        <rect x="0" y="0" width="380" height="120" rx="28" fill="#ffffff" fill-opacity="0.10" stroke="#ffffff" stroke-opacity="0.16"/>
+        <text x="28" y="50" fill="#fff" fill-opacity="0.84" font-size="24" font-family="Inter, Arial, sans-serif" font-weight="600">Foto não disponível</text>
+        <text x="28" y="88" fill="#fff" fill-opacity="0.68" font-size="22" font-family="Inter, Arial, sans-serif">Visual de fallback premium</text>
+      </g>
+    </svg>
+  `
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
 }
 
 async function fetchWikiPhotos(query: string) {
@@ -344,12 +391,12 @@ async function fetchWikiPhotos(query: string) {
 }
 
 function useHotelPhotos(record: HotelRecord | null) {
-  const [state, setState] = useState<PhotoState>({ loading: false, urls: [], source: 'fallback' })
+  const [state, setState] = useState<PhotoState>({ loading: false, urls: [], source: 'fallback visual' })
 
   useEffect(() => {
     let active = true
     if (!record) {
-      setState({ loading: false, urls: [], source: 'fallback' })
+      setState({ loading: false, urls: [], source: 'fallback visual' })
       return
     }
 
@@ -368,13 +415,16 @@ function useHotelPhotos(record: HotelRecord | null) {
       // ignore cache parse issues
     }
 
-    setState({ loading: true, urls: [], source: 'Wikimedia / fallback' })
+    setState({ loading: true, urls: [], source: 'Wikimedia Commons' })
     const query = [record.name, record.city, record.state_name].filter(Boolean).join(' ')
 
     void (async () => {
       const wiki = await fetchWikiPhotos(query)
-      const urls = [...wiki, ...scenicFallbacks(record)].filter((url, index, self) => self.indexOf(url) === index)
-      const next = { loading: false, urls, source: wiki.length ? 'Wikimedia Commons' : 'fallback' }
+      const next = {
+        loading: false,
+        urls: wiki,
+        source: wiki.length ? 'Wikimedia Commons' : 'fallback visual',
+      }
       if (!active) return
       setState(next)
 
@@ -394,6 +444,72 @@ function useHotelPhotos(record: HotelRecord | null) {
   }, [record])
 
   return state
+}
+
+function preloadImage(src: string) {
+  return new Promise<boolean>((resolve) => {
+    const image = new Image()
+    image.decoding = 'async'
+    image.referrerPolicy = 'no-referrer'
+    image.onload = () => resolve(true)
+    image.onerror = () => resolve(false)
+    image.src = src
+  })
+}
+
+function PhotoFrame({
+  sources,
+  fallbackSource,
+  alt,
+  className,
+  variant,
+}: {
+  sources: string[]
+  fallbackSource: string
+  alt: string
+  className: string
+  variant: 'hero' | 'thumb-a' | 'thumb-b'
+}) {
+  const [resolvedSource, setResolvedSource] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let active = true
+    setLoading(true)
+    setResolvedSource('')
+
+    void (async () => {
+      for (const source of sources) {
+        const ok = await preloadImage(source)
+        if (!active) return
+        if (ok) {
+          setResolvedSource(source)
+          setLoading(false)
+          return
+        }
+      }
+      if (!active) return
+      setResolvedSource(fallbackSource)
+      setLoading(false)
+    })()
+
+    return () => {
+      active = false
+    }
+  }, [sources, fallbackSource, variant])
+
+  const fallbackSelected = resolvedSource === fallbackSource
+  return (
+    <div className={`photo-frame ${className} ${fallbackSelected ? 'fallback-selected' : ''}`}>
+      {loading ? (
+        <div className="photo-skeleton photo-skeleton-overlay">Buscando imagem premium...</div>
+      ) : resolvedSource ? (
+        <img src={resolvedSource} alt={alt} className="photo-media" />
+      ) : (
+        <div className="photo-skeleton photo-skeleton-overlay">Imagem indisponível</div>
+      )}
+    </div>
+  )
 }
 
 function App() {
@@ -570,7 +686,8 @@ function App() {
   }, [activeRecords, selectedId])
 
   useEffect(() => {
-    if (!mapNodeRef.current || mapRef.current) return
+    if (loading || !mapNodeRef.current || mapRef.current) return
+
     const map = L.map(mapNodeRef.current, {
       zoomControl: true,
       scrollWheelZoom: false,
@@ -586,12 +703,16 @@ function App() {
     mapRef.current = map
     layerRef.current = layer
 
+    window.requestAnimationFrame(() => {
+      map.invalidateSize()
+    })
+
     return () => {
       map.remove()
       mapRef.current = null
       layerRef.current = null
     }
-  }, [])
+  }, [loading])
 
   useEffect(() => {
     if (!selected || !mapRef.current || selected.lat == null || selected.lon == null) return
@@ -994,14 +1115,30 @@ function App() {
               <div className="detail-photos">
                 {selectedPhotos.loading ? (
                   <div className="photo-skeleton">Buscando imagens premium...</div>
-                ) : selectedPhotos.urls.length ? (
-                  <div className="photo-grid">
-                    <img src={selectedPhotos.urls[0]} alt={selected.name} className="photo-main" />
-                    <img src={selectedPhotos.urls[1] || selectedPhotos.urls[0]} alt={`${selected.name} detalhe`} className="photo-thumb" />
-                    <img src={selectedPhotos.urls[2] || selectedPhotos.urls[0]} alt={`${selected.name} contexto`} className="photo-thumb" />
-                  </div>
                 ) : (
-                  <div className="photo-skeleton">Sem foto disponível no momento.</div>
+                  <div className="photo-grid">
+                    <PhotoFrame
+                      sources={selectedPhotos.urls}
+                      fallbackSource={buildFallbackPhotoDataUri(selected, 'hero')}
+                      alt={selected.name}
+                      className="photo-main"
+                      variant="hero"
+                    />
+                    <PhotoFrame
+                      sources={selectedPhotos.urls}
+                      fallbackSource={buildFallbackPhotoDataUri(selected, 'thumb-a')}
+                      alt={`${selected.name} detalhe`}
+                      className="photo-thumb"
+                      variant="thumb-a"
+                    />
+                    <PhotoFrame
+                      sources={selectedPhotos.urls}
+                      fallbackSource={buildFallbackPhotoDataUri(selected, 'thumb-b')}
+                      alt={`${selected.name} contexto`}
+                      className="photo-thumb"
+                      variant="thumb-b"
+                    />
+                  </div>
                 )}
                 <div className="photo-credit">Fonte: {selectedPhotos.source} · busca por <strong>{selected.photo_query}</strong></div>
               </div>
