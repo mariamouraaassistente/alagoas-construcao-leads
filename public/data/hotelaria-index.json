@@ -1,0 +1,232 @@
+{
+  "states": [
+    {
+      "stateCode": "AL",
+      "stateName": "Alagoas",
+      "total": 195,
+      "scoreAvg": 47.46,
+      "scoreMedian": 42,
+      "scoreMin": 22,
+      "scoreMax": 91,
+      "tierCounts": {
+        "A": 4,
+        "B": 27,
+        "C": 19,
+        "D": 145
+      },
+      "typeCounts": {
+        "Hotel": 153,
+        "Pousada / Guest house": 20,
+        "Hostel": 12,
+        "Motel": 10
+      },
+      "cityCounts": {
+        "—": 153,
+        "Maceió": 21,
+        "Maragogi": 5,
+        "Piranhas": 3,
+        "São Miguel dos Milagres": 3,
+        "Barra de São Miguel": 2,
+        "Japaratinga": 2,
+        "Major Isidoro": 2,
+        "Porto de Pedras": 1,
+        "Marechal Deodoro": 1,
+        "Murici": 1,
+        "Arapiraca": 1
+      },
+      "contactCounts": {
+        "phone": 48,
+        "website": 42,
+        "email": 22,
+        "hasContact": 59
+      },
+      "amenityCounts": {
+        "wifi": 28,
+        "air_conditioning": 5,
+        "wheelchair": 5,
+        "parking": 1,
+        "restaurant": 0,
+        "pool": 0
+      },
+      "starAvg": 0.1,
+      "starNonZero": 5,
+      "topSample": [
+        {
+          "rank": 1,
+          "score": 91,
+          "tier": "A",
+          "name": "KYROS POUSADA",
+          "city": "Maceió",
+          "type_label": "Hotel",
+          "website": "https://www.instagram.com/kyrospousada?igsh=MWEwbHdqZ3piODd3dA==",
+          "lat": -9.6306552,
+          "lon": -35.6965963
+        },
+        {
+          "rank": 2,
+          "score": 91,
+          "tier": "A",
+          "name": "Ritz Suites",
+          "city": "Maceió",
+          "type_label": "Hotel",
+          "website": "http://www.ritzsuites.com.br/",
+          "lat": -9.6326029,
+          "lon": -35.6973194
+        },
+        {
+          "rank": 3,
+          "score": 87,
+          "tier": "A",
+          "name": "Gungaporanga",
+          "city": "Barra de São Miguel",
+          "type_label": "Hotel",
+          "website": "https://www.gungaporanga.com.br/",
+          "lat": -9.8328339,
+          "lon": -35.9191277
+        },
+        {
+          "rank": 4,
+          "score": 85,
+          "tier": "A",
+          "name": "Ritz Barra de São Miguel",
+          "city": "Barra de São Miguel",
+          "type_label": "Hotel",
+          "website": "https://www.ritzbsm.com.br/",
+          "lat": -9.8299674,
+          "lon": -35.8825271
+        },
+        {
+          "rank": 5,
+          "score": 83,
+          "tier": "B",
+          "name": "Hotel São Francisco",
+          "city": null,
+          "type_label": "Hotel",
+          "website": "https://hotelsaofrancisco.tur.br",
+          "lat": -10.2901766,
+          "lon": -36.5856869
+        }
+      ],
+      "areaNote": "State of Alagoas (relation 303781 / area 3600303781)",
+      "source": "OpenStreetMap / Overpass API + Google Maps enrichment"
+    },
+    {
+      "stateCode": "BA",
+      "stateName": "Bahia",
+      "total": 1804,
+      "scoreAvg": 42.28,
+      "scoreMedian": 42.0,
+      "scoreMin": 22,
+      "scoreMax": 100,
+      "tierCounts": {
+        "A": 14,
+        "B": 118,
+        "C": 169,
+        "D": 1503
+      },
+      "typeCounts": {
+        "Hotel": 1094,
+        "Pousada / Guest house": 471,
+        "Hostel": 176,
+        "Motel": 63
+      },
+      "cityCounts": {
+        "—": 1408,
+        "Salvador": 42,
+        "Porto Seguro": 31,
+        "Centro": 25,
+        "Caetité": 22,
+        "Camaçari": 18,
+        "Teixeira de Freitas": 18,
+        "Mucuri": 12,
+        "Guanambi": 11,
+        "Pôr do Sol": 9,
+        "Livramento de Nossa Senhora": 8,
+        "Mata de São João": 7,
+        "Paulo Afonso": 7,
+        "Itapetinga": 7,
+        "Rio de Contas": 7,
+        "Lençóis": 6,
+        "Juazeiro": 6,
+        "Conde - BA": 5,
+        "camaçari": 5,
+        "Costa Dourada": 5
+      },
+      "contactCounts": {
+        "phone": 313,
+        "website": 203,
+        "email": 100,
+        "hasContact": 372
+      },
+      "amenityCounts": {
+        "wifi": 237,
+        "air_conditioning": 25,
+        "wheelchair": 28,
+        "parking": 0,
+        "restaurant": 0,
+        "pool": 3
+      },
+      "starAvg": 0.06,
+      "starNonZero": 28,
+      "topSample": [
+        {
+          "rank": 1,
+          "score": 100,
+          "tier": "A",
+          "name": "Iberostar Selection Praia do Forte",
+          "city": "Mata de São João",
+          "type_label": "Hotel",
+          "website": "https://www.iberostar.com/en/hotels/praia-do-forte/iberostar-praia-do-forte",
+          "lat": -12.5458278,
+          "lon": -37.9862988
+        },
+        {
+          "rank": 2,
+          "score": 97,
+          "tier": "A",
+          "name": "Novotel Salvador Rio Vermelho",
+          "city": "Salvador",
+          "type_label": "Hotel",
+          "website": "https://all.accor.com/hotel/B275/index.pt-br.shtml",
+          "lat": -13.0152105,
+          "lon": -38.4875307
+        },
+        {
+          "rank": 3,
+          "score": 91,
+          "tier": "A",
+          "name": "Iberostar Selection Praia do Forte",
+          "city": null,
+          "type_label": "Hotel",
+          "website": "https://www.iberostar.com/en/hotels/praia-do-forte/iberostar-praia-do-forte/",
+          "lat": -12.546203,
+          "lon": -37.9868866
+        },
+        {
+          "rank": 4,
+          "score": 90,
+          "tier": "A",
+          "name": "Camaçari Plaza Hotel",
+          "city": "Camaçari",
+          "type_label": "Hotel",
+          "website": "https://www.camacariplaza.com.br/pt-br/",
+          "lat": -12.703356,
+          "lon": -38.3212436
+        },
+        {
+          "rank": 5,
+          "score": 90,
+          "tier": "A",
+          "name": "Mercure Salvador Boulevard",
+          "city": "Salvador",
+          "type_label": "Hotel",
+          "website": "https://all.accor.com/lien_externe.svlt?goto=fiche_hotel&code_hotel=7361&merchantid=seo-maps-BR-7361&sourceid=aw-cen&utm_medium=seo%20maps&utm_source=google%20Maps&utm_campaign=seo%20maps",
+          "lat": -12.9822713,
+          "lon": -38.4558098
+        }
+      ],
+      "areaNote": "State of Bahia (relation 362413 / area 3600362413)",
+      "source": "OpenStreetMap / Overpass API + Google Maps enrichment"
+    }
+  ]
+}

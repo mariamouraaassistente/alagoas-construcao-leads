@@ -1,393 +1,1219 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import L from 'leaflet'
 import './App.css'
 
-type Lead = {
-  name: string
-  lat: number
-  lon: number
-  city?: string
-  state: string
-  phone?: string
-  phone_link?: string
-  website?: string
-  opening_hours?: string
-  shop?: string
-  office?: string
-  source?: string[]
+type StateCode = 'ALL' | 'AL' | 'BA'
+type Tier = 'A' | 'B' | 'C' | 'D'
+type SortKey = 'score_desc' | 'rank_asc' | 'stars_desc' | 'contact_desc' | 'city_asc' | 'name_asc'
+type ContactFilter = 'all' | 'with-contact' | 'phone' | 'website' | 'email'
+
+type AmenityKey = 'wifi' | 'air_conditioning' | 'wheelchair' | 'parking' | 'restaurant' | 'pool'
+
+type HotelRecord = {
+  rank: number
   score: number
-  tier: 'A' | 'B' | 'C'
-  fit: 'alto' | 'médio' | 'baixo'
-  google_maps_url: string
-  tags?: Record<string, string>
+  tier: Tier
+  tourism: string
+  type_label: string
+  name: string
+  city: string | null
+  state: string
+  address: string | null
+  phone: string | null
+  website: string | null
+  email: string | null
+  stars: number | null
+  opening_hours: string | null
+  wheelchair: string | null
+  parking: string | null
+  wifi: string | null
+  air_conditioning: string | null
+  restaurant: string | null
+  pool: string | null
+  lat: number | null
+  lon: number | null
+  google_maps: string | null
+  osm_url: string | null
+  osm_type: string | null
+  osm_id: number | string | null
+  tags_count: number | null
+  relevant_tags: string | null
+  state_code: 'AL' | 'BA'
+  state_name: string
+  location_label: string
+  has_phone: boolean
+  has_website: boolean
+  has_email: boolean
+  has_contact: boolean
+  photo_query: string
+  score_band: 'premium' | 'opportunity' | 'long_tail'
 }
 
-type Payload = {
-  meta: {
-    state: string
-    focus: string
+type StatePayload = {
+  stateCode: 'AL' | 'BA'
+  stateName: string
+  summary: {
+    total: number
+    scoreAvg: number
+    scoreMedian: number
+    scoreMin: number
+    scoreMax: number
+    tierCounts: Record<string, number>
+    typeCounts: Record<string, number>
+    cityCounts: Record<string, number>
+    contactCounts: Record<string, number>
+    amenityCounts: Record<string, number>
+    starAvg: number
+    starNonZero: number
+    topSample: Array<Record<string, unknown>>
+    areaNote: string
     source: string
-    generated_at: string
-    total_raw_candidates: number
-    total_leads: number
   }
-  leads: Lead[]
+  records: HotelRecord[]
 }
 
-const money = new Intl.NumberFormat('pt-BR')
-
-function segmentLabel(lead: Lead) {
-  const name = `${lead.name} ${(lead.shop || '')} ${(lead.office || '')}`.toLowerCase()
-  if (name.includes('home center')) return 'Home center'
-  if (name.includes('casa da construção') || name.includes('casa e construção')) return 'Casa de construção'
-  if (name.includes('material de construção') || name.includes('materiais de construção')) return 'Material de construção'
-  if (name.includes('madeireira')) return 'Madeireira'
-  if (name.includes('tintas') || name.includes('paint')) return 'Tintas'
-  if (name.includes('construtora') || name.includes('construções') || name.includes('construcoes')) return 'Construtora'
-  if (lead.office === 'construction_company') return 'Construtora'
-  if (lead.shop === 'hardware' || lead.shop === 'doityourself') return 'Ferragens / acabamento'
-  return 'Obra e infraestrutura'
+type Filters = {
+  state: StateCode
+  search: string
+  city: string
+  tier: 'all' | Tier
+  typeLabel: string
+  minScore: number
+  minStars: number
+  contact: ContactFilter
+  amenities: Record<AmenityKey, boolean>
+  sort: SortKey
 }
 
-function scoreLabel(score: number) {
-  if (score >= 60) return 'Alta'
-  if (score >= 40) return 'Média'
-  return 'Baixa'
+type PhotoState = {
+  loading: boolean
+  urls: string[]
+  source: string
 }
 
-function downloadCsv(leads: Lead[]) {
-  const headers = ['nome', 'cidade', 'estado', 'score', 'tier', 'fit', 'segmento', 'telefone', 'site', 'maps']
-  const rows = leads.map((lead) => [
-    lead.name,
-    lead.city || '',
-    lead.state,
-    String(lead.score),
-    lead.tier,
-    lead.fit,
-    segmentLabel(lead),
-    lead.phone || '',
-    lead.website || '',
-    lead.google_maps_url,
-  ])
-  const csv = [headers, ...rows]
-    .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(','))
-    .join('\n')
+type PhotoCache = Record<string, PhotoState>
 
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'leads-alagoas-construcao.csv'
-  a.click()
-  URL.revokeObjectURL(url)
+type Stats = {
+  total: number
+  avgScore: number
+  topCount: number
+  contactCount: number
+  websiteCount: number
+  phoneCount: number
+  emailCount: number
+  premiumCount: number
+  averageStars: number
+}
+
+const PHOTO_CACHE_KEY = 'litoral-intelligence-photo-cache-v1'
+const FILTERS_KEY = 'litoral-intelligence-filters-v1'
+const SELECTED_KEY = 'litoral-intelligence-selected-v1'
+
+const STATE_LABELS: Record<StateCode, string> = {
+  ALL: 'Todos',
+  AL: 'Alagoas',
+  BA: 'Bahia',
+}
+
+const AMENITIES: Array<{ key: AmenityKey; label: string }> = [
+  { key: 'wifi', label: 'Wi‑Fi' },
+  { key: 'air_conditioning', label: 'Ar-cond.' },
+  { key: 'wheelchair', label: 'Acessível' },
+  { key: 'parking', label: 'Estacion.' },
+  { key: 'restaurant', label: 'Restaur.' },
+  { key: 'pool', label: 'Piscina' },
+]
+
+const INITIAL_FILTERS: Filters = {
+  state: 'ALL',
+  search: '',
+  city: 'all',
+  tier: 'all',
+  typeLabel: 'all',
+  minScore: 0,
+  minStars: 0,
+  contact: 'all',
+  amenities: {
+    wifi: false,
+    air_conditioning: false,
+    wheelchair: false,
+    parking: false,
+    restaurant: false,
+    pool: false,
+  },
+  sort: 'score_desc',
+}
+
+function normalizeText(value: string) {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function safeNumber(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0
+}
+
+function round(value: number, digits = 0) {
+  const factor = 10 ** digits
+  return Math.round(value * factor) / factor
+}
+
+function formatNumber(value: number) {
+  return new Intl.NumberFormat('pt-BR').format(value)
+}
+
+function formatStars(value: number | null) {
+  if (!value || value <= 0) return '—'
+  return `${value.toFixed(1)}★`
+}
+
+function formatCompactContact(record: HotelRecord) {
+  const pieces = [record.city || '—', record.state]
+  return pieces.join(' · ')
+}
+
+function mapUrl(record: HotelRecord) {
+  if (record.google_maps) return record.google_maps
+  if (record.lat != null && record.lon != null) {
+    return `https://www.google.com/maps/search/?api=1&query=${record.lat},${record.lon}`
+  }
+  return '#'
+}
+
+function osmUrl(record: HotelRecord) {
+  if (record.osm_url) return record.osm_url
+  return '#'
+}
+
+function scoreBandColor(tier: Tier) {
+  switch (tier) {
+    case 'A':
+      return 'var(--accent-ink)'
+    case 'B':
+      return 'var(--accent-gold)'
+    case 'C':
+      return 'var(--accent-ocean)'
+    default:
+      return 'var(--muted-2)'
+  }
+}
+
+function getAmenityValue(record: HotelRecord, key: AmenityKey) {
+  const value = record[key]
+  return value != null && value !== '' && value !== 'no' && value !== 'No' && value !== '0'
+}
+
+function buildContactScore(record: HotelRecord) {
+  return (record.has_phone ? 1 : 0) + (record.has_website ? 1 : 0) + (record.has_email ? 1 : 0)
+}
+
+function filterRecords(records: HotelRecord[], filters: Filters) {
+  const q = normalizeText(filters.search)
+  const city = normalizeText(filters.city)
+  const type = normalizeText(filters.typeLabel)
+
+  return records.filter((record) => {
+    if (filters.minScore && safeNumber(record.score) < filters.minScore) return false
+    if (filters.minStars && safeNumber(record.stars) < filters.minStars) return false
+    if (filters.tier !== 'all' && record.tier !== filters.tier) return false
+    if (filters.city !== 'all') {
+      const recordCity = normalizeText(record.city || '')
+      if (!recordCity || recordCity !== city) return false
+    }
+    if (filters.typeLabel !== 'all' && normalizeText(record.type_label) !== type) return false
+    if (filters.contact === 'with-contact' && !record.has_contact) return false
+    if (filters.contact === 'phone' && !record.has_phone) return false
+    if (filters.contact === 'website' && !record.has_website) return false
+    if (filters.contact === 'email' && !record.has_email) return false
+
+    for (const amenity of AMENITIES) {
+      if (filters.amenities[amenity.key] && !getAmenityValue(record, amenity.key)) return false
+    }
+
+    if (q) {
+      const haystack = [
+        record.name,
+        record.city ?? '',
+        record.state,
+        record.address ?? '',
+        record.type_label,
+        record.tourism,
+        record.phone ?? '',
+        record.website ?? '',
+        record.email ?? '',
+        record.relevant_tags ?? '',
+      ]
+        .map(normalizeText)
+        .join(' ')
+      if (!haystack.includes(q)) return false
+    }
+
+    return true
+  })
+}
+
+function sortRecords(records: HotelRecord[], sort: SortKey) {
+  return [...records].sort((a, b) => {
+    switch (sort) {
+      case 'rank_asc':
+        return a.rank - b.rank
+      case 'stars_desc':
+        return safeNumber(b.stars) - safeNumber(a.stars) || b.score - a.score
+      case 'contact_desc':
+        return buildContactScore(b) - buildContactScore(a) || b.score - a.score
+      case 'city_asc':
+        return (a.city || 'zzz').localeCompare(b.city || 'zzz', 'pt-BR') || b.score - a.score
+      case 'name_asc':
+        return a.name.localeCompare(b.name, 'pt-BR')
+      case 'score_desc':
+      default:
+        return b.score - a.score || a.rank - b.rank
+    }
+  })
+}
+
+function computeStats(records: HotelRecord[]): Stats {
+  const total = records.length
+  const scores = records.map((item) => item.score)
+  const stars = records.map((item) => safeNumber(item.stars)).filter((value) => value > 0)
+  return {
+    total,
+    avgScore: total ? round(scores.reduce((acc, item) => acc + item, 0) / total, 1) : 0,
+    topCount: records.filter((item) => item.tier === 'A').length,
+    contactCount: records.filter((item) => item.has_contact).length,
+    websiteCount: records.filter((item) => item.has_website).length,
+    phoneCount: records.filter((item) => item.has_phone).length,
+    emailCount: records.filter((item) => item.has_email).length,
+    premiumCount: records.filter((item) => item.score >= 70).length,
+    averageStars: stars.length ? round(stars.reduce((acc, item) => acc + item, 0) / stars.length, 1) : 0,
+  }
+}
+
+function createInitials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('')
+}
+
+function stateAccent(record: HotelRecord) {
+  return record.state_code === 'AL' ? 'var(--accent-gold)' : 'var(--accent-ocean)'
+}
+
+function scenicFallbacks(record: HotelRecord) {
+  const city = encodeURIComponent(normalizeText(record.city || record.state_name).replace(/\s/g, '+'))
+  const state = record.state_code === 'AL' ? 'alagoas' : 'bahia'
+  return [
+    `https://source.unsplash.com/featured/1600x1200/?${city},hotel,travel`,
+    `https://source.unsplash.com/featured/1600x1200/?${state},coast,hotel`,
+    `https://source.unsplash.com/featured/1600x1200/?${state},beach,resort`,
+  ]
+}
+
+async function fetchWikiPhotos(query: string) {
+  const searches = [
+    `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=4&prop=pageimages|info&piprop=thumbnail&pithumbsize=1600&inprop=url&origin=*`,
+    `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&gsrlimit=4&prop=imageinfo&iiprop=url|size&iiurlwidth=1600&origin=*`,
+  ]
+
+  const urls: string[] = []
+  for (const apiUrl of searches) {
+    try {
+      const response = await fetch(apiUrl)
+      if (!response.ok) continue
+      const data = await response.json()
+      const pages = data?.query?.pages ? Object.values(data.query.pages) : []
+      for (const page of pages as Array<Record<string, unknown>>) {
+        const thumb = page.thumbnail as { source?: string } | undefined
+        const imageInfo = Array.isArray(page.imageinfo) ? page.imageinfo[0] as { url?: string } : undefined
+        const source = thumb?.source || imageInfo?.url
+        if (source && !urls.includes(source)) urls.push(source)
+      }
+    } catch {
+      // ignore network lookup failures and rely on fallback imagery
+    }
+  }
+
+  return urls
+}
+
+function useHotelPhotos(record: HotelRecord | null) {
+  const [state, setState] = useState<PhotoState>({ loading: false, urls: [], source: 'fallback' })
+
+  useEffect(() => {
+    let active = true
+    if (!record) {
+      setState({ loading: false, urls: [], source: 'fallback' })
+      return
+    }
+
+    const key = `${record.state_code}-${record.osm_type ?? ''}-${record.osm_id ?? ''}-${record.rank}`
+    try {
+      const cachedRaw = window.localStorage.getItem(PHOTO_CACHE_KEY)
+      if (cachedRaw) {
+        const cache = JSON.parse(cachedRaw) as PhotoCache
+        const cached = cache[key]
+        if (cached) {
+          setState(cached)
+          return
+        }
+      }
+    } catch {
+      // ignore cache parse issues
+    }
+
+    setState({ loading: true, urls: [], source: 'Wikimedia / fallback' })
+    const query = [record.name, record.city, record.state_name].filter(Boolean).join(' ')
+
+    void (async () => {
+      const wiki = await fetchWikiPhotos(query)
+      const urls = [...wiki, ...scenicFallbacks(record)].filter((url, index, self) => self.indexOf(url) === index)
+      const next = { loading: false, urls, source: wiki.length ? 'Wikimedia Commons' : 'fallback' }
+      if (!active) return
+      setState(next)
+
+      try {
+        const raw = window.localStorage.getItem(PHOTO_CACHE_KEY)
+        const cache = raw ? (JSON.parse(raw) as PhotoCache) : {}
+        cache[key] = next
+        window.localStorage.setItem(PHOTO_CACHE_KEY, JSON.stringify(cache))
+      } catch {
+        // best effort cache
+      }
+    })()
+
+    return () => {
+      active = false
+    }
+  }, [record])
+
+  return state
 }
 
 function App() {
-  const [payload, setPayload] = useState<Payload | null>(null)
+  const mapRef = useRef<L.Map | null>(null)
+  const mapNodeRef = useRef<HTMLDivElement | null>(null)
+  const layerRef = useRef<L.LayerGroup | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [search, setSearch] = useState('')
-  const [city, setCity] = useState('')
-  const [tier, setTier] = useState<'all' | 'A' | 'B' | 'C'>('all')
-  const [minScore, setMinScore] = useState(0)
-  const [sortBy, setSortBy] = useState<'score' | 'name' | 'city'>('score')
+  const [payloads, setPayloads] = useState<Record<'AL' | 'BA', StatePayload> | null>(null)
+  const [selectedId, setSelectedId] = useState<string>(() => {
+    if (typeof window === 'undefined') return ''
+    return window.localStorage.getItem(SELECTED_KEY) ?? ''
+  })
+  const [filters, setFilters] = useState<Filters>(() => {
+    if (typeof window === 'undefined') return INITIAL_FILTERS
+    try {
+      const raw = window.localStorage.getItem(FILTERS_KEY)
+      if (!raw) return INITIAL_FILTERS
+      const parsed = JSON.parse(raw) as Partial<Filters>
+      return {
+        ...INITIAL_FILTERS,
+        ...parsed,
+        amenities: { ...INITIAL_FILTERS.amenities, ...(parsed.amenities ?? {}) },
+      }
+    } catch {
+      return INITIAL_FILTERS
+    }
+  })
 
   useEffect(() => {
-    let mounted = true
-    fetch('/leads.json')
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`Falha ao carregar leads (${res.status})`)
-        return (await res.json()) as Payload
-      })
-      .then((data) => {
-        if (!mounted) return
-        setPayload(data)
-      })
-      .catch((err: unknown) => {
-        if (!mounted) return
-        setError(err instanceof Error ? err.message : 'Erro ao carregar os dados')
-      })
-      .finally(() => {
-        if (!mounted) return
-        setLoading(false)
-      })
-
+    let active = true
+    async function load() {
+      setLoading(true)
+      try {
+        const [al, ba] = await Promise.all([
+          fetch('/data/hotelaria-al.json').then((response) => response.json() as Promise<StatePayload>),
+          fetch('/data/hotelaria-ba.json').then((response) => response.json() as Promise<StatePayload>),
+        ])
+        if (!active) return
+        setPayloads({ AL: al, BA: ba })
+        setError('')
+      } catch {
+        if (!active) return
+        setError('Não consegui carregar os dados dos dois estados.')
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+    void load()
     return () => {
-      mounted = false
+      active = false
     }
   }, [])
 
-  const leads = useMemo(() => payload?.leads ?? [], [payload])
-  const cities = useMemo(() => {
-    return Array.from(new Set(leads.map((lead) => lead.city?.trim()).filter(Boolean) as string[])).sort()
-  }, [leads])
+  const allRecords = useMemo(() => {
+    if (!payloads) return []
+    return [...payloads.AL.records, ...payloads.BA.records]
+  }, [payloads])
 
-  const stats = useMemo(() => {
-    const valid = leads.filter((lead) => lead.score >= minScore)
-    return {
-      total: leads.length,
-      a: leads.filter((lead) => lead.tier === 'A').length,
-      withPhone: leads.filter((lead) => lead.phone).length,
-      withWebsite: leads.filter((lead) => lead.website).length,
-      highFit: leads.filter((lead) => lead.fit === 'alto').length,
-      filtered: valid.length,
+  const activeRecords = useMemo(() => {
+    const source = filters.state === 'AL' ? payloads?.AL.records : filters.state === 'BA' ? payloads?.BA.records : allRecords
+    return source ? sortRecords(filterRecords(source, filters), filters.sort) : []
+  }, [allRecords, filters, payloads])
+
+  useEffect(() => {
+    if (!activeRecords.length) return
+    const selectedStillVisible = activeRecords.some((item) => selectedId ? buildRecordKey(item) === selectedId : false)
+    if (!selectedStillVisible) {
+      setSelectedId(buildRecordKey(activeRecords[0]))
     }
-  }, [leads, minScore])
+  }, [activeRecords, selectedId])
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    let next = [...leads]
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem(FILTERS_KEY, JSON.stringify(filters))
+  }, [filters])
 
-    if (q) {
-      next = next.filter((lead) => {
-        const hay = [lead.name, lead.city, lead.shop, lead.office, segmentLabel(lead), lead.phone, lead.website]
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase()
-        return hay.includes(q)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !selectedId) return
+    window.localStorage.setItem(SELECTED_KEY, selectedId)
+  }, [selectedId])
+
+  const cityOptions = useMemo(() => {
+    const pool = filters.state === 'AL' ? payloads?.AL.records : filters.state === 'BA' ? payloads?.BA.records : allRecords
+    const unique = new Map<string, string>()
+    for (const item of pool || []) {
+      if (!item.city) continue
+      const key = normalizeText(item.city)
+      if (!unique.has(key)) unique.set(key, item.city)
+    }
+    return [...unique.values()].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+  }, [allRecords, filters.state, payloads])
+
+  const typeOptions = useMemo(() => {
+    const pool = filters.state === 'AL' ? payloads?.AL.records : filters.state === 'BA' ? payloads?.BA.records : allRecords
+    const unique = new Set<string>()
+    for (const item of pool || []) unique.add(item.type_label)
+    return [...unique.values()].sort((a, b) => a.localeCompare(b, 'pt-BR'))
+  }, [allRecords, filters.state, payloads])
+
+  const selected = useMemo(() => activeRecords.find((item) => buildRecordKey(item) === selectedId) ?? activeRecords[0] ?? null, [activeRecords, selectedId])
+  const selectedPhotos = useHotelPhotos(selected)
+
+  const stats = useMemo(() => computeStats(activeRecords), [activeRecords])
+  const overallStats = useMemo(() => computeStats(allRecords), [allRecords])
+
+  const tierCounts = useMemo(() => {
+    const counter: Record<Tier, number> = { A: 0, B: 0, C: 0, D: 0 }
+    for (const item of activeRecords) counter[item.tier] += 1
+    return counter
+  }, [activeRecords])
+
+  const cityCounts = useMemo(() => {
+    const counter = new Map<string, number>()
+    for (const item of activeRecords) {
+      const city = item.city || 'Sem cidade'
+      counter.set(city, (counter.get(city) || 0) + 1)
+    }
+    return [...counter.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6)
+  }, [activeRecords])
+
+  const filteredPageSize = 18
+  const [page, setPage] = useState(1)
+  useEffect(() => {
+    setPage(1)
+  }, [filters.search, filters.city, filters.tier, filters.typeLabel, filters.minScore, filters.minStars, filters.contact, filters.sort, filters.state, JSON.stringify(filters.amenities)])
+
+  const pagedRecords = useMemo(() => {
+    const start = (page - 1) * filteredPageSize
+    return activeRecords.slice(start, start + filteredPageSize)
+  }, [activeRecords, page])
+
+  const totalPages = Math.max(1, Math.ceil(activeRecords.length / filteredPageSize))
+
+  useEffect(() => {
+    if (!mapRef.current || !layerRef.current) return
+    layerRef.current.clearLayers()
+
+    const renderer = L.canvas()
+    const bounds = L.latLngBounds([])
+
+    for (const record of activeRecords) {
+      if (record.lat == null || record.lon == null) continue
+      const marker = L.circleMarker([record.lat, record.lon], {
+        renderer,
+        radius: record.rank <= 10 ? 9 : 6,
+        color: stateAccent(record),
+        fillColor: stateAccent(record),
+        fillOpacity: record.rank <= 10 ? 0.95 : 0.78,
+        weight: buildRecordKey(record) === selectedId ? 2.5 : 1.25,
+        opacity: 1,
       })
+
+      const popupHtml = `
+        <div style="min-width:180px">
+          <div style="font-weight:700;font-size:14px;margin-bottom:4px">${escapeHtml(record.name)}</div>
+          <div style="font-size:12px;color:#555;margin-bottom:8px">${escapeHtml(formatCompactContact(record))}</div>
+          <div style="font-size:12px;display:flex;gap:8px;flex-wrap:wrap">
+            <span>Score ${record.score}</span>
+            <span>${record.tier}</span>
+            <span>${formatStars(record.stars)}</span>
+          </div>
+        </div>
+      `
+      marker.bindPopup(popupHtml)
+      marker.on('click', () => setSelectedId(buildRecordKey(record)))
+      marker.addTo(layerRef.current)
+      bounds.extend([record.lat, record.lon])
     }
 
-    if (city) {
-      next = next.filter((lead) => (lead.city || '').toLowerCase() === city.toLowerCase())
+    if (bounds.isValid()) {
+      mapRef.current.fitBounds(bounds.pad(0.15), { animate: true, duration: 0.4 })
+    }
+  }, [activeRecords, selectedId])
+
+  useEffect(() => {
+    if (!mapNodeRef.current || mapRef.current) return
+    const map = L.map(mapNodeRef.current, {
+      zoomControl: true,
+      scrollWheelZoom: false,
+      attributionControl: true,
+    }).setView([-12.5, -39.0], 6)
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map)
+
+    const layer = L.layerGroup().addTo(map)
+    mapRef.current = map
+    layerRef.current = layer
+
+    return () => {
+      map.remove()
+      mapRef.current = null
+      layerRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!selected || !mapRef.current || selected.lat == null || selected.lon == null) return
+    mapRef.current.flyTo([selected.lat, selected.lon], Math.max(mapRef.current.getZoom(), 11), { duration: 0.55 })
+  }, [selected])
+
+  function buildStateRecordsScope() {
+    if (filters.state === 'AL') return payloads?.AL.records ?? []
+    if (filters.state === 'BA') return payloads?.BA.records ?? []
+    return allRecords
+  }
+
+  function updateAmenity(key: AmenityKey) {
+    setFilters((current) => ({
+      ...current,
+      amenities: { ...current.amenities, [key]: !current.amenities[key] },
+    }))
+  }
+
+  function exportCsv(records: HotelRecord[]) {
+    const columns = [
+      'rank',
+      'score',
+      'tier',
+      'type_label',
+      'name',
+      'city',
+      'state',
+      'address',
+      'phone',
+      'website',
+      'email',
+      'stars',
+      'lat',
+      'lon',
+      'google_maps',
+      'osm_url',
+    ]
+    const quote = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`
+    const rows = [columns.join(',')]
+    for (const item of records) {
+      rows.push(
+        [
+          item.rank,
+          item.score,
+          item.tier,
+          item.type_label,
+          item.name,
+          item.city ?? '',
+          item.state,
+          item.address ?? '',
+          item.phone ?? '',
+          item.website ?? '',
+          item.email ?? '',
+          item.stars ?? '',
+          item.lat ?? '',
+          item.lon ?? '',
+          item.google_maps ?? '',
+          item.osm_url ?? '',
+        ]
+          .map(quote)
+          .join(','),
+      )
     }
 
-    if (tier !== 'all') {
-      next = next.filter((lead) => lead.tier === tier)
-    }
+    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `litoral-intelligence-${filters.state.toLowerCase()}-filtered.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
-    next = next.filter((lead) => lead.score >= minScore)
+  function resetFilters() {
+    setFilters(INITIAL_FILTERS)
+  }
 
-    next.sort((a, b) => {
-      if (sortBy === 'name') return a.name.localeCompare(b.name, 'pt-BR')
-      if (sortBy === 'city') return (a.city || '').localeCompare(b.city || '', 'pt-BR') || b.score - a.score
-      return b.score - a.score || a.name.localeCompare(b.name, 'pt-BR')
-    })
-
-    return next
-  }, [leads, search, city, tier, minScore, sortBy])
+  function buildRecordKey(record: HotelRecord) {
+    return `${record.state_code}-${record.osm_type ?? 'x'}-${record.osm_id ?? record.rank}`
+  }
 
   if (loading) {
     return (
-      <main className="page-shell center-state">
-        <div className="loading-card">
-          <p className="eyebrow">Radar Comercial Alagoas</p>
-          <h1>Carregando os leads públicos…</h1>
-          <p>Estou preparando a lista de construtoras, casas de construção, depósitos e madeireiras.</p>
-        </div>
+      <main className="app-shell">
+        <LoadingState />
       </main>
     )
   }
 
   if (error) {
     return (
-      <main className="page-shell center-state">
-        <div className="loading-card error">
-          <p className="eyebrow">Erro de carregamento</p>
-          <h1>Não consegui abrir a base de leads</h1>
-          <p>{error}</p>
-        </div>
+      <main className="app-shell">
+        <ErrorState message={error} onRetry={() => window.location.reload()} />
       </main>
     )
   }
 
   return (
-    <main className="page-shell">
+    <main className="app-shell">
       <section className="hero-card">
-        <div className="hero-top">
-          <div>
-            <p className="eyebrow">Radar Comercial Alagoas</p>
-            <h1>Leads de construção em Alagoas, com foco no que realmente compra obra.</h1>
-            <p className="hero-copy">
-              Base pública de prospecção para construtoras, depósitos, madeireiras, home centers e casas de
-              construção. A ideia é enxergar oportunidade, filtrar rápido e sair com lista pronta para abordagem.
-            </p>
+        <div className="hero-copy">
+          <div className="eyebrow-row">
+            <span className="eyebrow">Litoral Intelligence</span>
+            <span className="eyebrow badge">Hotelaria AL + BA</span>
           </div>
-          <div className="hero-badge">
-            <span>{payload?.meta.state}</span>
-            <strong>{money.format(payload?.meta.total_leads || 0)}</strong>
-            <small>leads na base</small>
-          </div>
-        </div>
-
-        <div className="stats-grid">
-          <article>
-            <span>Total bruto</span>
-            <strong>{money.format(stats.total)}</strong>
-          </article>
-          <article>
-            <span>Tier A</span>
-            <strong>{money.format(stats.a)}</strong>
-          </article>
-          <article>
-            <span>Com telefone</span>
-            <strong>{money.format(stats.withPhone)}</strong>
-          </article>
-          <article>
-            <span>Com site</span>
-            <strong>{money.format(stats.withWebsite)}</strong>
-          </article>
-          <article>
-            <span>Alta aderência</span>
-            <strong>{money.format(stats.highFit)}</strong>
-          </article>
-          <article>
-            <span>Após filtros</span>
-            <strong>{money.format(stats.filtered)}</strong>
-          </article>
-        </div>
-
-        <div className="hero-actions">
-          <a className="primary-button" href="#lista">Ver leads</a>
-          <button className="secondary-button" type="button" onClick={() => downloadCsv(filtered)}>
-            Baixar CSV filtrado
-          </button>
-          <a className="secondary-button" href="https://www.google.com/maps" target="_blank" rel="noreferrer">
-            Abrir Google Maps
-          </a>
-        </div>
-
-        <p className="hero-meta">
-          Fonte: {payload?.meta.source} · gerado em {payload?.meta.generated_at} · foco em {payload?.meta.focus}.
-        </p>
-      </section>
-
-      <section className="filters-card">
-        <div className="filters-row">
-          <label>
-            <span>Buscar</span>
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nome, cidade, segmento…" />
-          </label>
-          <label>
-            <span>Cidade</span>
-            <select value={city} onChange={(e) => setCity(e.target.value)}>
-              <option value="">Todo o estado</option>
-              {cities.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            <span>Tier</span>
-            <select value={tier} onChange={(e) => setTier(e.target.value as typeof tier)}>
-              <option value="all">Todos</option>
-              <option value="A">A</option>
-              <option value="B">B</option>
-              <option value="C">C</option>
-            </select>
-          </label>
-          <label>
-            <span>Score mínimo</span>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={minScore}
-              onChange={(e) => setMinScore(Number(e.target.value))}
-            />
-            <strong>{minScore}</strong>
-          </label>
-          <label>
-            <span>Ordenar por</span>
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)}>
-              <option value="score">Score</option>
-              <option value="name">Nome</option>
-              <option value="city">Cidade</option>
-            </select>
-          </label>
-        </div>
-      </section>
-
-      <section className="summary-strip">
-        <div>
-          <strong>{filtered.length}</strong>
-          <span>leads visíveis</span>
-        </div>
-        <div>
-          <strong>{cities.length}</strong>
-          <span>cidades na base</span>
-        </div>
-        <div>
-          <strong>{scoreLabel(Math.max(...filtered.map((lead) => lead.score), 0))}</strong>
-          <span>melhor oportunidade</span>
-        </div>
-      </section>
-
-      <section className="list-wrap" id="lista">
-        <div className="section-head">
-          <div>
-            <p className="eyebrow">Lista operacional</p>
-            <h2>Top leads para prospecção</h2>
-          </div>
-          <p>
-            Dica: os leads com score mais alto tendem a ter melhor fit para obra, revenda ou suprimento de materiais.
+          <h1>Radar premium de hotelaria com ranking, mapa e detalhe por local.</h1>
+          <p className="lead">
+            Um painel robusto para explorar Alagoas e Bahia com filtros avançados, pins no mapa, indicadores de
+            contato e análise de potencial comercial. Tudo sem backend, pronto para validar operação e UX.
           </p>
+
+          <div className="hero-actions">
+            <button type="button" className="button button-dark" onClick={() => document.getElementById('workspace')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+              Explorar ranking
+            </button>
+            <button type="button" className="button button-light" onClick={() => exportCsv(activeRecords)}>
+              Exportar CSV
+            </button>
+            <button type="button" className="button button-light" onClick={resetFilters}>
+              Limpar filtros
+            </button>
+          </div>
         </div>
 
-        <div className="lead-grid">
-          {filtered.map((lead, index) => (
-            <article className="lead-card" key={`${lead.name}-${lead.lat}-${lead.lon}`}>
-              <div className="lead-top">
-                <div>
-                  <p className="rank">#{index + 1}</p>
-                  <h3>{lead.name}</h3>
-                  <p className="segment">{segmentLabel(lead)}</p>
-                </div>
-                <div className={`score-pill tier-${lead.tier}`}>
-                  <strong>{lead.score}</strong>
-                  <span>{lead.tier}</span>
-                </div>
-              </div>
+        <div className="hero-panel">
+          <div className="state-switcher">
+            {(['ALL', 'AL', 'BA'] as StateCode[]).map((state) => (
+              <button
+                key={state}
+                type="button"
+                className={`state-pill ${filters.state === state ? 'active' : ''}`}
+                onClick={() => setFilters((current) => ({ ...current, state }))}
+              >
+                <span>{STATE_LABELS[state]}</span>
+                <strong>{state === 'ALL' ? formatNumber(overallStats.total) : formatNumber((payloads?.[state]?.summary.total ?? 0))}</strong>
+              </button>
+            ))}
+          </div>
 
-              <div className="lead-meta">
-                <span>{lead.city || 'Cidade não informada'}</span>
-                <span>{lead.state}</span>
-                <span>Fit {lead.fit}</span>
-              </div>
-
-              <p className="lead-note">
-                {lead.opening_hours ? `Horário público: ${lead.opening_hours}` : 'Sem horário público informado.'}
-              </p>
-
-              <div className="tag-row">
-                {lead.shop && <span className="tag">shop={lead.shop}</span>}
-                {lead.office && <span className="tag">office={lead.office}</span>}
-                {lead.source?.map((src) => (
-                  <span className="tag" key={src}>
-                    {src}
-                  </span>
-                ))}
-              </div>
-
-              <div className="lead-actions">
-                <a href={lead.google_maps_url} target="_blank" rel="noreferrer">
-                  Abrir no Maps
-                </a>
-                {lead.website && (
-                  <a href={lead.website} target="_blank" rel="noreferrer">
-                    Site
-                  </a>
-                )}
-                {lead.phone_link && (
-                  <a href={lead.phone_link}>
-                    Ligar
-                  </a>
-                )}
-              </div>
-            </article>
-          ))}
+          <div className="hero-stats">
+            <StatCard label="Resultados filtrados" value={formatNumber(stats.total)} meta={`de ${formatNumber(filters.state === 'ALL' ? overallStats.total : buildStateRecordsScope().length)} locais`} />
+            <StatCard label="Score médio" value={`${stats.avgScore}`} meta="qualidade do ranking" />
+            <StatCard label="Contato direto" value={formatNumber(stats.contactCount)} meta={`${formatNumber(stats.phoneCount)} telefone · ${formatNumber(stats.websiteCount)} site`} />
+            <StatCard label="Tier A" value={formatNumber(tierCounts.A)} meta={`${formatNumber(stats.premiumCount)} com score ≥ 70`} />
+          </div>
         </div>
       </section>
 
-      <footer className="footer-note">
+      <section className="insights-grid">
+        <article className="insight-card">
+          <div className="card-head">
+            <div>
+              <p className="eyebrow">Distribuição por tier</p>
+              <h2>Ranking por qualidade</h2>
+            </div>
+            <span className="card-kicker">Atualiza com filtros</span>
+          </div>
+          <TierBars counts={tierCounts} total={Math.max(stats.total, 1)} />
+        </article>
+
+        <article className="insight-card">
+          <div className="card-head">
+            <div>
+              <p className="eyebrow">Top cidades</p>
+              <h2>Concentração de oferta</h2>
+            </div>
+            <span className="card-kicker">Top 6</span>
+          </div>
+          <CityBars rows={cityCounts} total={Math.max(stats.total, 1)} />
+        </article>
+
+        <article className="insight-card contact-card">
+          <div className="card-head">
+            <div>
+              <p className="eyebrow">Cobertura de contato</p>
+              <h2>Capacidade de abordagem</h2>
+            </div>
+            <span className="card-kicker">Phone / site / e-mail</span>
+          </div>
+          <ContactCoverage stats={stats} total={Math.max(stats.total, 1)} />
+        </article>
+      </section>
+
+      <section id="workspace" className="workspace-grid">
+        <aside className="filters-panel">
+          <div className="panel-head">
+            <div>
+              <p className="eyebrow">Filtros</p>
+              <h2>Controle do painel</h2>
+            </div>
+            <button type="button" className="pill-button" onClick={resetFilters}>
+              Reset
+            </button>
+          </div>
+
+          <div className="control-group">
+            <label className="field">
+              <span>Busca</span>
+              <input value={filters.search} onChange={(e) => setFilters((current) => ({ ...current, search: e.target.value }))} placeholder="Hotel, pousada, cidade, rua, website..." />
+            </label>
+          </div>
+
+          <div className="control-grid two-up">
+            <label className="field">
+              <span>Cidade</span>
+              <select value={filters.city} onChange={(e) => setFilters((current) => ({ ...current, city: e.target.value }))}>
+                <option value="all">Todas</option>
+                {cityOptions.map((city) => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span>Tipo</span>
+              <select value={filters.typeLabel} onChange={(e) => setFilters((current) => ({ ...current, typeLabel: e.target.value }))}>
+                <option value="all">Todos</option>
+                {typeOptions.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="field">
+              <span>Tier</span>
+              <select value={filters.tier} onChange={(e) => setFilters((current) => ({ ...current, tier: e.target.value as Filters['tier'] }))}>
+                <option value="all">Todos</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+              </select>
+            </label>
+
+            <label className="field">
+              <span>Ordenar por</span>
+              <select value={filters.sort} onChange={(e) => setFilters((current) => ({ ...current, sort: e.target.value as SortKey }))}>
+                <option value="score_desc">Score desc.</option>
+                <option value="rank_asc">Ranking</option>
+                <option value="stars_desc">Estrelas</option>
+                <option value="contact_desc">Contato</option>
+                <option value="city_asc">Cidade</option>
+                <option value="name_asc">Nome</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="control-grid three-up">
+            <label className="field">
+              <span>Score mínimo</span>
+              <input type="range" min="0" max="100" value={filters.minScore} onChange={(e) => setFilters((current) => ({ ...current, minScore: Number(e.target.value) }))} />
+              <small className="hint">{filters.minScore}+ pontos</small>
+            </label>
+
+            <label className="field">
+              <span>Estrelas mín.</span>
+              <select value={filters.minStars} onChange={(e) => setFilters((current) => ({ ...current, minStars: Number(e.target.value) }))}>
+                <option value={0}>Qualquer</option>
+                <option value={3}>3+</option>
+                <option value={4}>4+</option>
+                <option value={5}>5</option>
+              </select>
+            </label>
+
+            <label className="field">
+              <span>Contato</span>
+              <select value={filters.contact} onChange={(e) => setFilters((current) => ({ ...current, contact: e.target.value as ContactFilter }))}>
+                <option value="all">Todos</option>
+                <option value="with-contact">Tem contato</option>
+                <option value="phone">Telefone</option>
+                <option value="website">Website</option>
+                <option value="email">E-mail</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="amenities-box">
+            <div className="mini-title">Amenidades</div>
+            <div className="amenity-grid">
+              {AMENITIES.map((amenity) => (
+                <button
+                  key={amenity.key}
+                  type="button"
+                  className={`chip ${filters.amenities[amenity.key] ? 'active' : ''}`}
+                  onClick={() => updateAmenity(amenity.key)}
+                >
+                  {amenity.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="filter-footer">
+            <button type="button" className="button button-dark full" onClick={() => exportCsv(activeRecords)}>
+              Exportar filtrado
+            </button>
+            <p className="tiny-note">Busca sem acento, ordenação dinâmica e mapa sincronizado.</p>
+          </div>
+        </aside>
+
+        <section className="main-column">
+          <div className="map-card">
+            <div className="card-head">
+              <div>
+                <p className="eyebrow">Mapa interativo</p>
+                <h2>Pins clicáveis no OSM</h2>
+              </div>
+              <span className="card-kicker">{formatNumber(activeRecords.length)} pontos visíveis</span>
+            </div>
+            <div className="map-wrap">
+              <div ref={mapNodeRef} className="map-canvas" aria-label="Mapa interativo com os locais filtrados" />
+            </div>
+          </div>
+
+          <div className="ranking-card">
+            <div className="card-head">
+              <div>
+                <p className="eyebrow">Ranking</p>
+                <h2>Locais em destaque</h2>
+              </div>
+              <span className="card-kicker">Página {page} de {totalPages}</span>
+            </div>
+
+            <div className="ranking-list">
+              {pagedRecords.length ? pagedRecords.map((record) => {
+                const key = buildRecordKey(record)
+                const isSelected = selected ? buildRecordKey(selected) === key : false
+                return (
+                  <button key={key} type="button" className={`ranking-row ${isSelected ? 'active' : ''}`} onClick={() => setSelectedId(key)}>
+                    <div className="rank-badge">
+                      <span>{record.rank}</span>
+                    </div>
+                    <div className="ranking-main">
+                      <div className="row-head">
+                        <strong>{record.name}</strong>
+                        <span className="score-pill" style={{ background: scoreBandColor(record.tier) }}>
+                          {record.score}
+                        </span>
+                      </div>
+                      <div className="row-meta">
+                        <span>{record.type_label}</span>
+                        <span>{record.city || 'Sem cidade'} · {record.state_code}</span>
+                        <span>{formatStars(record.stars)}</span>
+                        <span>{record.has_contact ? 'Contato pronto' : 'Contato parcial'}</span>
+                      </div>
+                    </div>
+                    <div className="row-tail">
+                      <span className={`tier tier-${record.tier}`}>Tier {record.tier}</span>
+                      <span>{record.has_website ? 'Site' : 'Sem site'}</span>
+                    </div>
+                  </button>
+                )
+              }) : (
+                <div className="empty-state large">
+                  Nenhum resultado com esses filtros. Tente remover um filtro de cidade, contato ou amenidade.
+                </div>
+              )}
+            </div>
+
+            <div className="pagination">
+              <button type="button" className="button button-light" onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={page <= 1}>
+                Anterior
+              </button>
+              <span>{page} / {totalPages}</span>
+              <button type="button" className="button button-light" onClick={() => setPage((value) => Math.min(totalPages, value + 1))} disabled={page >= totalPages}>
+                Próxima
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <aside className="detail-panel">
+          <div className="card-head">
+            <div>
+              <p className="eyebrow">Detalhe do local</p>
+              <h2>Experiência premium</h2>
+            </div>
+            {selected && <span className="card-kicker">{selected.state_name}</span>}
+          </div>
+
+          {selected ? (
+            <>
+              <div className="detail-hero">
+                <div className="detail-copy">
+                  <div className="detail-topline">
+                    <span className={`tier tier-${selected.tier}`}>Tier {selected.tier}</span>
+                    <span className="detail-score">Score {selected.score}</span>
+                  </div>
+                  <h3>{selected.name}</h3>
+                  <p>{selected.type_label} · {formatCompactContact(selected)}</p>
+                </div>
+                <div className="detail-badge">
+                  <div className="detail-initials">{createInitials(selected.name)}</div>
+                  <small>OSM ID</small>
+                  <strong>{selected.osm_id ?? '—'}</strong>
+                </div>
+              </div>
+
+              <div className="detail-photos">
+                {selectedPhotos.loading ? (
+                  <div className="photo-skeleton">Buscando imagens premium...</div>
+                ) : selectedPhotos.urls.length ? (
+                  <div className="photo-grid">
+                    <img src={selectedPhotos.urls[0]} alt={selected.name} className="photo-main" />
+                    <img src={selectedPhotos.urls[1] || selectedPhotos.urls[0]} alt={`${selected.name} detalhe`} className="photo-thumb" />
+                    <img src={selectedPhotos.urls[2] || selectedPhotos.urls[0]} alt={`${selected.name} contexto`} className="photo-thumb" />
+                  </div>
+                ) : (
+                  <div className="photo-skeleton">Sem foto disponível no momento.</div>
+                )}
+                <div className="photo-credit">Fonte: {selectedPhotos.source} · busca por <strong>{selected.photo_query}</strong></div>
+              </div>
+
+              <div className="detail-grid">
+                <InfoCard label="Cidade" value={selected.city || 'Sem cidade'} />
+                <InfoCard label="Estrelas" value={formatStars(selected.stars)} />
+                <InfoCard label="Contato" value={selected.has_contact ? 'Pronto' : 'Parcial'} />
+                <InfoCard label="Tags" value={selected.tags_count != null ? formatNumber(Number(selected.tags_count)) : '—'} />
+              </div>
+
+              <div className="links-box">
+                <a href={mapUrl(selected)} target="_blank" rel="noreferrer" className="link-row">
+                  <span>Google Maps</span>
+                  <strong>Abrir rota</strong>
+                </a>
+                <a href={osmUrl(selected)} target="_blank" rel="noreferrer" className="link-row">
+                  <span>OpenStreetMap</span>
+                  <strong>Ver pin</strong>
+                </a>
+                {selected.website ? (
+                  <a href={selected.website} target="_blank" rel="noreferrer" className="link-row">
+                    <span>Website</span>
+                    <strong>Visitar site</strong>
+                  </a>
+                ) : null}
+              </div>
+
+              <div className="contact-box">
+                <div>
+                  <span>Telefone</span>
+                  <strong>{selected.phone || '—'}</strong>
+                </div>
+                <div>
+                  <span>E-mail</span>
+                  <strong>{selected.email || '—'}</strong>
+                </div>
+                <div>
+                  <span>Endereço</span>
+                  <strong>{selected.address || '—'}</strong>
+                </div>
+                <div>
+                  <span>Horário</span>
+                  <strong>{selected.opening_hours || '—'}</strong>
+                </div>
+              </div>
+
+              <div className="amenity-box">
+                {AMENITIES.map((amenity) => {
+                  const active = getAmenityValue(selected, amenity.key)
+                  return (
+                    <span key={amenity.key} className={`amenity-pill ${active ? 'on' : 'off'}`}>
+                      {amenity.label}
+                    </span>
+                  )
+                })}
+              </div>
+
+              <div className="detail-footer">
+                <button type="button" className="button button-light" onClick={() => activeRecords[0] && setSelectedId(buildRecordKey(activeRecords[0]))}>
+                  Primeiro visível
+                </button>
+                <button type="button" className="button button-dark" onClick={() => exportCsv([selected])}>
+                  Exportar este local
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="empty-state large">Selecione um local no ranking ou no mapa.</div>
+          )}
+        </aside>
+      </section>
+
+      <footer className="footer-card">
+        <div>
+          <p className="eyebrow">Base de dados</p>
+          <h2>Alagoas + Bahia em um único sistema</h2>
+        </div>
         <p>
-          Dados públicos de OpenStreetMap/Nominatim. Use como base comercial inicial e valide telefone, cidade e
-          operação antes do contato.
+          Fonte: OpenStreetMap / Overpass API com enriquecimento público. Layout pensado para vender, explorar e
+          filtrar a base como um produto premium interno.
         </p>
       </footer>
     </main>
   )
+}
+
+function LoadingState() {
+  return (
+    <section className="state-card center-card">
+      <p className="eyebrow">Carregando</p>
+      <h1>Litoral Intelligence</h1>
+      <p>Preparando os dados de Alagoas e Bahia, pins, rankings e fotos.</p>
+      <div className="skeleton-grid">
+        <div className="skeleton" />
+        <div className="skeleton" />
+        <div className="skeleton" />
+      </div>
+    </section>
+  )
+}
+
+function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <section className="state-card center-card">
+      <p className="eyebrow">Erro</p>
+      <h1>Não foi possível abrir o painel</h1>
+      <p>{message}</p>
+      <button type="button" className="button button-dark" onClick={onRetry}>
+        Tentar novamente
+      </button>
+    </section>
+  )
+}
+
+function StatCard({ label, value, meta }: { label: string; value: string; meta: string }) {
+  return (
+    <article className="stat-card">
+      <span>{label}</span>
+      <strong>{value}</strong>
+      <small>{meta}</small>
+    </article>
+  )
+}
+
+function TierBars({ counts, total }: { counts: Record<Tier, number>; total: number }) {
+  const rows: Array<{ tier: Tier; label: string }> = [
+    { tier: 'A', label: 'Tier A' },
+    { tier: 'B', label: 'Tier B' },
+    { tier: 'C', label: 'Tier C' },
+    { tier: 'D', label: 'Tier D' },
+  ]
+  return (
+    <div className="bars-list">
+      {rows.map(({ tier, label }) => {
+        const value = counts[tier]
+        const width = total ? Math.min(100, (value / total) * 100) : 0
+        return (
+          <div key={tier} className="bar-row">
+            <div className="bar-label">
+              <span>{label}</span>
+              <strong>{formatNumber(value)}</strong>
+            </div>
+            <div className="bar-track"><span style={{ width: `${width}%`, background: scoreBandColor(tier) }} /></div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function CityBars({ rows, total }: { rows: Array<[string, number]>; total: number }) {
+  return (
+    <div className="bars-list">
+      {rows.length ? rows.map(([city, value]) => {
+        const width = total ? Math.min(100, (value / total) * 100 * 4) : 0
+        return (
+          <div key={city} className="bar-row">
+            <div className="bar-label">
+              <span>{city}</span>
+              <strong>{formatNumber(value)}</strong>
+            </div>
+            <div className="bar-track subtle"><span style={{ width: `${Math.max(12, width)}%` }} /></div>
+          </div>
+        )
+      }) : <div className="empty-state">Sem cidades para mostrar.</div>}
+    </div>
+  )
+}
+
+function ContactCoverage({ stats, total }: { stats: Stats; total: number }) {
+  const rows = [
+    ['Telefone', stats.phoneCount],
+    ['Website', stats.websiteCount],
+    ['E-mail', stats.emailCount],
+    ['Contato direto', stats.contactCount],
+  ] as const
+
+  return (
+    <div className="coverage-grid">
+      {rows.map(([label, value]) => {
+        const width = total ? (value / total) * 100 : 0
+        return (
+          <div key={label} className="coverage-row">
+            <div className="coverage-head">
+              <span>{label}</span>
+              <strong>{formatNumber(value)}</strong>
+            </div>
+            <div className="bar-track soft"><span style={{ width: `${width}%` }} /></div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function InfoCard({ label, value }: { label: string; value: string }) {
+  return (
+    <article className="info-card">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </article>
+  )
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
 }
 
 export default App
