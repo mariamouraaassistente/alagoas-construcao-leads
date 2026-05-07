@@ -8,7 +8,7 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --page-bg: #f7f3ec;
+  --page-bg: #f4efe6;
 }
 
 * {
@@ -29,7 +29,7 @@ body {
   min-width: 320px;
   margin: 0;
   background: var(--page-bg);
-  color: #111827;
+  color: #0f172a;
   overflow-x: hidden;
 }
 
@@ -44,11 +44,10 @@ img {
 }
 
 ::selection {
-  background: rgba(109, 40, 217, 0.2);
-  color: #111827;
+  background: rgba(14, 116, 144, 0.18);
+  color: #0f172a;
 }
 
-/* Better default scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
@@ -57,7 +56,7 @@ img {
 ::-webkit-scrollbar-thumb {
   background: rgba(15, 23, 42, 0.18);
   border-radius: 999px;
-  border: 2px solid rgba(255, 255, 255, 0.7);
+  border: 2px solid rgba(255, 255, 255, 0.72);
 }
 
 ::-webkit-scrollbar-thumb:hover {

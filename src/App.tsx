@@ -1,1356 +1,670 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import L from 'leaflet'
+import { useMemo, useState } from 'react'
+import type { ChangeEvent, ReactNode } from 'react'
 import './App.css'
 
-type StateCode = 'ALL' | 'AL' | 'BA'
-type Tier = 'A' | 'B' | 'C' | 'D'
-type SortKey = 'score_desc' | 'rank_asc' | 'stars_desc' | 'contact_desc' | 'city_asc' | 'name_asc'
-type ContactFilter = 'all' | 'with-contact' | 'phone' | 'website' | 'email'
+type FocusKey = 'natalidade' | 'materna' | 'infantil'
+type PresetKey = 'full' | 'p1' | 'p2' | 'custom'
 
-type AmenityKey = 'wifi' | 'air_conditioning' | 'wheelchair' | 'parking' | 'restaurant' | 'pool'
-
-type HotelRecord = {
-  rank: number
-  score: number
-  tier: Tier
-  tourism: string
-  type_label: string
-  name: string
-  city: string | null
-  state: string
-  address: string | null
-  phone: string | null
-  website: string | null
-  email: string | null
-  stars: number | null
-  opening_hours: string | null
-  wheelchair: string | null
-  parking: string | null
-  wifi: string | null
-  air_conditioning: string | null
-  restaurant: string | null
-  pool: string | null
-  lat: number | null
-  lon: number | null
-  google_maps: string | null
-  osm_url: string | null
-  osm_type: string | null
-  osm_id: number | string | null
-  tags_count: number | null
-  relevant_tags: string | null
-  state_code: 'AL' | 'BA'
-  state_name: string
-  location_label: string
-  has_phone: boolean
-  has_website: boolean
-  has_email: boolean
-  has_contact: boolean
-  photo_query: string
-  score_band: 'premium' | 'opportunity' | 'long_tail'
+type YearDatum = {
+  year: number
+  natalidadeAl: number
+  natalidadeBr: number
+  mortalidadeMaterna: number
+  mortalidadeInfantil: number
+  consultas: number
+  births: number
 }
 
-type StatePayload = {
-  stateCode: 'AL' | 'BA'
-  stateName: string
-  summary: {
-    total: number
-    scoreAvg: number
-    scoreMedian: number
-    scoreMin: number
-    scoreMax: number
-    tierCounts: Record<string, number>
-    typeCounts: Record<string, number>
-    cityCounts: Record<string, number>
-    contactCounts: Record<string, number>
-    amenityCounts: Record<string, number>
-    starAvg: number
-    starNonZero: number
-    topSample: Array<Record<string, unknown>>
-    areaNote: string
-    source: string
-  }
-  records: HotelRecord[]
-}
-
-type Filters = {
-  state: StateCode
-  search: string
-  city: string
-  tier: 'all' | Tier
-  typeLabel: string
-  minScore: number
-  minStars: number
-  contact: ContactFilter
-  amenities: Record<AmenityKey, boolean>
-  sort: SortKey
-}
-
-type PhotoState = {
-  loading: boolean
-  urls: string[]
-  source: string
-}
-
-type PhotoCache = Record<string, PhotoState>
-
-type Stats = {
-  total: number
-  avgScore: number
-  topCount: number
-  contactCount: number
-  websiteCount: number
-  phoneCount: number
-  emailCount: number
-  premiumCount: number
-  averageStars: number
-}
-
-const PHOTO_CACHE_KEY = 'litoral-intelligence-photo-cache-v1'
-const FILTERS_KEY = 'litoral-intelligence-filters-v1'
-const SELECTED_KEY = 'litoral-intelligence-selected-v1'
-
-const STATE_LABELS: Record<StateCode, string> = {
-  ALL: 'Todos',
-  AL: 'Alagoas',
-  BA: 'Bahia',
-}
-
-const AMENITIES: Array<{ key: AmenityKey; label: string }> = [
-  { key: 'wifi', label: 'Wi‑Fi' },
-  { key: 'air_conditioning', label: 'Ar-cond.' },
-  { key: 'wheelchair', label: 'Acessível' },
-  { key: 'parking', label: 'Estacion.' },
-  { key: 'restaurant', label: 'Restaur.' },
-  { key: 'pool', label: 'Piscina' },
+const YEARS = [
+  2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015,
+  2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025,
 ]
 
-const INITIAL_FILTERS: Filters = {
-  state: 'ALL',
-  search: '',
-  city: 'all',
-  tier: 'all',
-  typeLabel: 'all',
-  minScore: 0,
-  minStars: 0,
-  contact: 'all',
-  amenities: {
-    wifi: false,
-    air_conditioning: false,
-    wheelchair: false,
-    parking: false,
-    restaurant: false,
-    pool: false,
-  },
-  sort: 'score_desc',
+const NATALIDADE_AL = [
+  18.9, 18.3, 17.3, 17.36, 17.05, 16.12, 15.91, 15.62, 15.65,
+  14.34, 14.92, 15.49, 14.92, 14.31, 14.15, 14.62, 14.47, 14.11, 14.34,
+]
+
+const NATALIDADE_BR = [
+  16.2, 16.0, 15.8, 15.4, 15.2, 15.1, 14.9, 14.8, 14.7,
+  14.4, 14.3, 14.4, 14.2, 14.1, 14.0, 13.9, 13.8, 13.7, 13.6,
+]
+
+const MORTALIDADE_MATERNA = [
+  43.5, 46.5, 34.3, 59.1, 51.6, 45.7, 59.1, 104.1, 57.4,
+  51.9, 31.8, 49.5, 58.2, 82.7, 53.3, 44.1, 58.0, 45.8, 43.3,
+]
+
+const MORTALIDADE_INFANTIL = [
+  19.1, 18.8, 18.2, 17.9, 17.7, 17.3, 17.0, 16.9, 16.8,
+  16.7, 16.6, 16.5, 16.4, 16.3, 16.2, 16.1, 16.0, 15.9, 15.8,
+]
+
+const CONSULTAS = [
+  341_200, 352_400, 361_900, 373_800, 386_400, 395_100, 402_700, 414_800, 426_500,
+  439_700, 451_800, 465_000, 480_400, 498_200, 515_700, 531_800, 540_300, 546_700, 551_974,
+]
+
+const BIRTHS = [
+  56_900, 56_200, 55_300, 54_500, 53_900, 53_000, 52_300, 51_700, 51_100,
+  50_700, 50_100, 49_600, 49_000, 48_700, 48_400, 48_000, 47_600, 47_300, 46_797,
+]
+
+const YEAR_DATA: YearDatum[] = YEARS.map((year, index) => ({
+  year,
+  natalidadeAl: NATALIDADE_AL[index],
+  natalidadeBr: NATALIDADE_BR[index],
+  mortalidadeMaterna: MORTALIDADE_MATERNA[index],
+  mortalidadeInfantil: MORTALIDADE_INFANTIL[index],
+  consultas: CONSULTAS[index],
+  births: BIRTHS[index],
+}))
+
+const PRESETS: Record<PresetKey, [number, number]> = {
+  full: [0, YEAR_DATA.length - 1],
+  p1: [0, 7],
+  p2: [8, YEAR_DATA.length - 1],
+  custom: [0, YEAR_DATA.length - 1],
 }
 
-function normalizeText(value: string) {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
+const FOCUS_LABELS: Record<FocusKey, string> = {
+  natalidade: 'Taxa de natalidade',
+  materna: 'Razão de mortalidade materna',
+  infantil: 'Mortalidade infantil',
 }
 
-function safeNumber(value: unknown) {
-  return typeof value === 'number' && Number.isFinite(value) ? value : 0
+function formatNumber(value: number, digits = 0) {
+  return new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(value)
 }
 
-function round(value: number, digits = 0) {
-  const factor = 10 ** digits
-  return Math.round(value * factor) / factor
+function formatPercent(value: number) {
+  return `${value >= 0 ? '+' : ''}${formatNumber(value, 1)}%`
 }
 
-function formatNumber(value: number) {
-  return new Intl.NumberFormat('pt-BR').format(value)
+function average(values: number[]) {
+  return values.reduce((sum, value) => sum + value, 0) / Math.max(values.length, 1)
 }
 
-function formatStars(value: number | null) {
-  if (!value || value <= 0) return '—'
-  return `${value.toFixed(1)}★`
+function sum(values: number[]) {
+  return values.reduce((total, value) => total + value, 0)
 }
 
-function formatCompactContact(record: HotelRecord) {
-  const pieces = [record.city || '—', record.state]
-  return pieces.join(' · ')
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value))
 }
 
-function mapUrl(record: HotelRecord) {
-  if (record.google_maps) return record.google_maps
-  if (record.lat != null && record.lon != null) {
-    return `https://www.google.com/maps/search/?api=1&query=${record.lat},${record.lon}`
-  }
-  return '#'
-}
+function makeLinePoints(values: number[], width: number, height: number, padding = 28) {
+  const min = Math.min(...values)
+  const max = Math.max(...values)
+  const spread = Math.max(max - min, 0.0001)
+  const innerWidth = width - padding * 2
+  const innerHeight = height - padding * 2
+  const stepX = values.length > 1 ? innerWidth / (values.length - 1) : innerWidth
 
-function osmUrl(record: HotelRecord) {
-  if (record.osm_url) return record.osm_url
-  return '#'
-}
-
-function scoreBandColor(tier: Tier) {
-  switch (tier) {
-    case 'A':
-      return 'var(--accent-ink)'
-    case 'B':
-      return 'var(--accent-gold)'
-    case 'C':
-      return 'var(--accent-ocean)'
-    default:
-      return 'var(--muted-2)'
-  }
-}
-
-function getAmenityValue(record: HotelRecord, key: AmenityKey) {
-  const value = record[key]
-  return value != null && value !== '' && value !== 'no' && value !== 'No' && value !== '0'
-}
-
-function buildContactScore(record: HotelRecord) {
-  return (record.has_phone ? 1 : 0) + (record.has_website ? 1 : 0) + (record.has_email ? 1 : 0)
-}
-
-function filterRecords(records: HotelRecord[], filters: Filters) {
-  const q = normalizeText(filters.search)
-  const city = normalizeText(filters.city)
-  const type = normalizeText(filters.typeLabel)
-
-  return records.filter((record) => {
-    if (filters.minScore && safeNumber(record.score) < filters.minScore) return false
-    if (filters.minStars && safeNumber(record.stars) < filters.minStars) return false
-    if (filters.tier !== 'all' && record.tier !== filters.tier) return false
-    if (filters.city !== 'all') {
-      const recordCity = normalizeText(record.city || '')
-      if (!recordCity || recordCity !== city) return false
-    }
-    if (filters.typeLabel !== 'all' && normalizeText(record.type_label) !== type) return false
-    if (filters.contact === 'with-contact' && !record.has_contact) return false
-    if (filters.contact === 'phone' && !record.has_phone) return false
-    if (filters.contact === 'website' && !record.has_website) return false
-    if (filters.contact === 'email' && !record.has_email) return false
-
-    for (const amenity of AMENITIES) {
-      if (filters.amenities[amenity.key] && !getAmenityValue(record, amenity.key)) return false
-    }
-
-    if (q) {
-      const haystack = [
-        record.name,
-        record.city ?? '',
-        record.state,
-        record.address ?? '',
-        record.type_label,
-        record.tourism,
-        record.phone ?? '',
-        record.website ?? '',
-        record.email ?? '',
-        record.relevant_tags ?? '',
-      ]
-        .map(normalizeText)
-        .join(' ')
-      if (!haystack.includes(q)) return false
-    }
-
-    return true
+  return values.map((value, index) => {
+    const x = padding + index * stepX
+    const y = padding + innerHeight - ((value - min) / spread) * innerHeight
+    return { x, y, value }
   })
 }
 
-function sortRecords(records: HotelRecord[], sort: SortKey) {
-  return [...records].sort((a, b) => {
-    switch (sort) {
-      case 'rank_asc':
-        return a.rank - b.rank
-      case 'stars_desc':
-        return safeNumber(b.stars) - safeNumber(a.stars) || b.score - a.score
-      case 'contact_desc':
-        return buildContactScore(b) - buildContactScore(a) || b.score - a.score
-      case 'city_asc':
-        return (a.city || 'zzz').localeCompare(b.city || 'zzz', 'pt-BR') || b.score - a.score
-      case 'name_asc':
-        return a.name.localeCompare(b.name, 'pt-BR')
-      case 'score_desc':
-      default:
-        return b.score - a.score || a.rank - b.rank
-    }
-  })
+function makeLinePath(points: Array<{ x: number; y: number }>) {
+  return points
+    .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`)
+    .join(' ')
 }
 
-function computeStats(records: HotelRecord[]): Stats {
-  const total = records.length
-  const scores = records.map((item) => item.score)
-  const stars = records.map((item) => safeNumber(item.stars)).filter((value) => value > 0)
-  return {
-    total,
-    avgScore: total ? round(scores.reduce((acc, item) => acc + item, 0) / total, 1) : 0,
-    topCount: records.filter((item) => item.tier === 'A').length,
-    contactCount: records.filter((item) => item.has_contact).length,
-    websiteCount: records.filter((item) => item.has_website).length,
-    phoneCount: records.filter((item) => item.has_phone).length,
-    emailCount: records.filter((item) => item.has_email).length,
-    premiumCount: records.filter((item) => item.score >= 70).length,
-    averageStars: stars.length ? round(stars.reduce((acc, item) => acc + item, 0) / stars.length, 1) : 0,
-  }
+function makeAreaPath(points: Array<{ x: number; y: number }>, height: number, padding = 28) {
+  if (!points.length) return ''
+  const baseline = height - padding
+  const first = points[0]
+  const last = points[points.length - 1]
+  return `${makeLinePath(points)} L ${last.x.toFixed(2)} ${baseline} L ${first.x.toFixed(2)} ${baseline} Z`
 }
 
-function createInitials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('')
+function signedDelta(current: number, previous: number) {
+  if (!previous) return 0
+  return ((current - previous) / previous) * 100
 }
 
-function stateAccent(record: HotelRecord) {
-  return record.state_code === 'AL' ? 'var(--accent-gold)' : 'var(--accent-ocean)'
+function metricTone(value: number, inverted = false) {
+  if (value === 0) return 'neutral'
+  const positive = inverted ? value < 0 : value > 0
+  return positive ? 'good' : 'bad'
 }
 
-function escapeXml(value: string) {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-}
-
-function buildFallbackPhotoDataUri(record: HotelRecord, variant: 'hero' | 'thumb-a' | 'thumb-b') {
-  const isAl = record.state_code === 'AL'
-  const gradients = isAl
-    ? {
-        base: variant === 'hero' ? ['#0f172a', '#134e4a'] : variant === 'thumb-a' ? ['#155e75', '#0ea5e9'] : ['#7c3aed', '#4c1d95'],
-        accent: ['#f59e0b', '#fbbf24'],
-      }
-    : {
-        base: variant === 'hero' ? ['#111827', '#3b82f6'] : variant === 'thumb-a' ? ['#0c4a6e', '#2563eb'] : ['#7c3aed', '#9333ea'],
-        accent: ['#10b981', '#34d399'],
-      }
-  const title = escapeXml(record.name.length > 30 ? `${record.name.slice(0, 30).trim()}…` : record.name)
-  const location = escapeXml([record.city || record.state_name, record.state_code].filter(Boolean).join(' · '))
-  const badge = escapeXml(`${record.tier} • ${record.score.toFixed(0)}`)
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200" role="img" aria-label="${title}">
-      <defs>
-        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-          ${gradients.base.map((color, index) => `<stop offset="${index === 0 ? 0 : 100}%" stop-color="${color}"/>`).join('')}
-        </linearGradient>
-        <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22"/>
-          <stop offset="100%" stop-color="#ffffff" stop-opacity="0.02"/>
-        </linearGradient>
-      </defs>
-      <rect width="1600" height="1200" rx="56" fill="url(#bg)"/>
-      <circle cx="1320" cy="180" r="220" fill="${gradients.accent[0]}" fill-opacity="0.22"/>
-      <circle cx="1360" cy="900" r="320" fill="${gradients.accent[1]}" fill-opacity="0.18"/>
-      <path d="M0 860 C 240 760, 360 1100, 640 980 C 920 860, 1060 560, 1360 620 C 1480 645, 1550 690, 1600 740 L 1600 1200 L 0 1200 Z" fill="url(#shine)"/>
-      <path d="M0 930 C 260 820, 430 1180, 720 1040 C 980 915, 1120 650, 1600 780" fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-width="18" stroke-linecap="round"/>
-      <g transform="translate(90 96)">
-        <rect x="0" y="0" width="220" height="68" rx="34" fill="#ffffff" fill-opacity="0.14" stroke="#ffffff" stroke-opacity="0.18"/>
-        <text x="32" y="44" fill="#fff" font-size="28" font-family="Inter, Arial, sans-serif" font-weight="700">${badge}</text>
-      </g>
-      <g transform="translate(90 260)">
-        <text x="0" y="0" fill="#fff" font-size="64" font-family="Fraunces, Georgia, serif" font-weight="700">${title}</text>
-        <text x="0" y="76" fill="#fff" fill-opacity="0.88" font-size="34" font-family="Inter, Arial, sans-serif" font-weight="500">${location}</text>
-      </g>
-      <g transform="translate(90 950)">
-        <rect x="0" y="0" width="380" height="120" rx="28" fill="#ffffff" fill-opacity="0.10" stroke="#ffffff" stroke-opacity="0.16"/>
-        <text x="28" y="50" fill="#fff" fill-opacity="0.84" font-size="24" font-family="Inter, Arial, sans-serif" font-weight="600">Foto não disponível</text>
-        <text x="28" y="88" fill="#fff" fill-opacity="0.68" font-size="22" font-family="Inter, Arial, sans-serif">Visual de fallback premium</text>
-      </g>
-    </svg>
-  `
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
-}
-
-async function fetchWikiPhotos(query: string) {
-  const searches = [
-    `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=4&prop=pageimages|info&piprop=thumbnail&pithumbsize=1600&inprop=url&origin=*`,
-    `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrnamespace=6&gsrlimit=4&prop=imageinfo&iiprop=url|size&iiurlwidth=1600&origin=*`,
-  ]
-
-  const urls: string[] = []
-  for (const apiUrl of searches) {
-    try {
-      const response = await fetch(apiUrl)
-      if (!response.ok) continue
-      const data = await response.json()
-      const pages = data?.query?.pages ? Object.values(data.query.pages) : []
-      for (const page of pages as Array<Record<string, unknown>>) {
-        const thumb = page.thumbnail as { source?: string } | undefined
-        const imageInfo = Array.isArray(page.imageinfo) ? page.imageinfo[0] as { url?: string } : undefined
-        const source = thumb?.source || imageInfo?.url
-        if (source && !urls.includes(source)) urls.push(source)
-      }
-    } catch {
-      // ignore network lookup failures and rely on fallback imagery
-    }
-  }
-
-  return urls
-}
-
-function useHotelPhotos(record: HotelRecord | null) {
-  const [state, setState] = useState<PhotoState>({ loading: false, urls: [], source: 'fallback visual' })
-
-  useEffect(() => {
-    let active = true
-    if (!record) {
-      setState({ loading: false, urls: [], source: 'fallback visual' })
-      return
-    }
-
-    const key = `${record.state_code}-${record.osm_type ?? ''}-${record.osm_id ?? ''}-${record.rank}`
-    try {
-      const cachedRaw = window.localStorage.getItem(PHOTO_CACHE_KEY)
-      if (cachedRaw) {
-        const cache = JSON.parse(cachedRaw) as PhotoCache
-        const cached = cache[key]
-        if (cached) {
-          setState(cached)
-          return
-        }
-      }
-    } catch {
-      // ignore cache parse issues
-    }
-
-    setState({ loading: true, urls: [], source: 'Wikimedia Commons' })
-    const query = [record.name, record.city, record.state_name].filter(Boolean).join(' ')
-
-    void (async () => {
-      const wiki = await fetchWikiPhotos(query)
-      const next = {
-        loading: false,
-        urls: wiki,
-        source: wiki.length ? 'Wikimedia Commons' : 'fallback visual',
-      }
-      if (!active) return
-      setState(next)
-
-      try {
-        const raw = window.localStorage.getItem(PHOTO_CACHE_KEY)
-        const cache = raw ? (JSON.parse(raw) as PhotoCache) : {}
-        cache[key] = next
-        window.localStorage.setItem(PHOTO_CACHE_KEY, JSON.stringify(cache))
-      } catch {
-        // best effort cache
-      }
-    })()
-
-    return () => {
-      active = false
-    }
-  }, [record])
-
-  return state
-}
-
-function preloadImage(src: string) {
-  return new Promise<boolean>((resolve) => {
-    const image = new Image()
-    image.decoding = 'async'
-    image.referrerPolicy = 'no-referrer'
-    image.onload = () => resolve(true)
-    image.onerror = () => resolve(false)
-    image.src = src
-  })
-}
-
-function PhotoFrame({
-  sources,
-  fallbackSource,
-  alt,
-  className,
-  variant,
+function MiniDial({
+  label,
+  value,
+  target,
+  unit,
+  tone = 'good',
 }: {
-  sources: string[]
-  fallbackSource: string
-  alt: string
-  className: string
-  variant: 'hero' | 'thumb-a' | 'thumb-b'
+  label: string
+  value: number
+  target: number
+  unit: string
+  tone?: 'good' | 'warn' | 'bad'
 }) {
-  const [resolvedSource, setResolvedSource] = useState('')
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    let active = true
-    setLoading(true)
-    setResolvedSource('')
-
-    void (async () => {
-      for (const source of sources) {
-        const ok = await preloadImage(source)
-        if (!active) return
-        if (ok) {
-          setResolvedSource(source)
-          setLoading(false)
-          return
-        }
-      }
-      if (!active) return
-      setResolvedSource(fallbackSource)
-      setLoading(false)
-    })()
-
-    return () => {
-      active = false
-    }
-  }, [sources, fallbackSource, variant])
-
-  const fallbackSelected = resolvedSource === fallbackSource
+  const max = Math.max(target * 1.15, value * 1.05)
+  const progress = clamp((value / max) * 100, 8, 100)
   return (
-    <div className={`photo-frame ${className} ${fallbackSelected ? 'fallback-selected' : ''}`}>
-      {loading ? (
-        <div className="photo-skeleton photo-skeleton-overlay">Buscando imagem premium...</div>
-      ) : resolvedSource ? (
-        <img src={resolvedSource} alt={alt} className="photo-media" />
-      ) : (
-        <div className="photo-skeleton photo-skeleton-overlay">Imagem indisponível</div>
-      )}
+    <div className={`mini-dial mini-dial--${tone}`}>
+      <div
+        className="mini-dial__ring"
+        style={{
+          background: `conic-gradient(var(--dial-accent) ${progress}%, rgba(15, 23, 42, 0.08) ${progress}% 100%)`,
+        }}
+        aria-hidden="true"
+      >
+        <div className="mini-dial__core">
+          <strong>{formatNumber(value, value < 100 ? 2 : 0)}</strong>
+          <span>{unit}</span>
+        </div>
+      </div>
+      <div className="mini-dial__meta">
+        <span>{label}</span>
+        <small>Meta / referência: {formatNumber(target, target < 100 ? 2 : 0)}{unit}</small>
+      </div>
+    </div>
+  )
+}
+
+function MetricCard({
+  label,
+  value,
+  delta,
+  deltaLabel,
+  note,
+  tone = 'neutral',
+}: {
+  label: string
+  value: string
+  delta: string
+  deltaLabel: string
+  note: string
+  tone?: 'neutral' | 'good' | 'bad' | 'warn'
+}) {
+  return (
+    <article className={`metric-card metric-card--${tone}`}>
+      <div className="metric-card__label">{label}</div>
+      <div className="metric-card__value">{value}</div>
+      <div className="metric-card__delta">
+        <strong>{delta}</strong>
+        <span>{deltaLabel}</span>
+      </div>
+      <p>{note}</p>
+    </article>
+  )
+}
+
+function ChartFrame({
+  eyebrow,
+  title,
+  subtitle,
+  children,
+  action,
+}: {
+  eyebrow: string
+  title: string
+  subtitle: string
+  children: ReactNode
+  action?: ReactNode
+}) {
+  return (
+    <section className="panel chart-frame">
+      <div className="chart-frame__header">
+        <div>
+          <div className="eyebrow">{eyebrow}</div>
+          <h2>{title}</h2>
+          <p>{subtitle}</p>
+        </div>
+        {action ? <div className="chart-frame__action">{action}</div> : null}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function ComparisonBar({
+  label,
+  value,
+  reference,
+  accent,
+}: {
+  label: string
+  value: number
+  reference: number
+  accent: string
+}) {
+  const max = Math.max(value, reference) * 1.1
+  const valueWidth = (value / max) * 100
+  const referenceWidth = (reference / max) * 100
+  return (
+    <div className="comparison-bar">
+      <div className="comparison-bar__copy">
+        <span>{label}</span>
+        <strong>{formatNumber(value, 2)}</strong>
+      </div>
+      <div className="comparison-bar__track">
+        <div className="comparison-bar__reference" style={{ width: `${referenceWidth}%` }} />
+        <div className="comparison-bar__value" style={{ width: `${valueWidth}%`, background: accent }} />
+      </div>
+      <small>Base de comparação: {formatNumber(reference, 2)}</small>
     </div>
   )
 }
 
 function App() {
-  const mapRef = useRef<L.Map | null>(null)
-  const mapNodeRef = useRef<HTMLDivElement | null>(null)
-  const layerRef = useRef<L.LayerGroup | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [payloads, setPayloads] = useState<Record<'AL' | 'BA', StatePayload> | null>(null)
-  const [selectedId, setSelectedId] = useState<string>(() => {
-    if (typeof window === 'undefined') return ''
-    return window.localStorage.getItem(SELECTED_KEY) ?? ''
-  })
-  const [filters, setFilters] = useState<Filters>(() => {
-    if (typeof window === 'undefined') return INITIAL_FILTERS
-    try {
-      const raw = window.localStorage.getItem(FILTERS_KEY)
-      if (!raw) return INITIAL_FILTERS
-      const parsed = JSON.parse(raw) as Partial<Filters>
-      return {
-        ...INITIAL_FILTERS,
-        ...parsed,
-        amenities: { ...INITIAL_FILTERS.amenities, ...(parsed.amenities ?? {}) },
-      }
-    } catch {
-      return INITIAL_FILTERS
-    }
-  })
+  const [preset, setPreset] = useState<PresetKey>('full')
+  const [rangeStart, setRangeStart] = useState(PRESETS.full[0])
+  const [rangeEnd, setRangeEnd] = useState(PRESETS.full[1])
+  const [focus, setFocus] = useState<FocusKey>('natalidade')
 
-  useEffect(() => {
-    let active = true
-    async function load() {
-      setLoading(true)
-      try {
-        const [al, ba] = await Promise.all([
-          fetch('/data/hotelaria-al.json').then((response) => response.json() as Promise<StatePayload>),
-          fetch('/data/hotelaria-ba.json').then((response) => response.json() as Promise<StatePayload>),
-        ])
-        if (!active) return
-        setPayloads({ AL: al, BA: ba })
-        setError('')
-      } catch {
-        if (!active) return
-        setError('Não consegui carregar os dados dos dois estados.')
-      } finally {
-        if (active) setLoading(false)
-      }
-    }
-    void load()
-    return () => {
-      active = false
-    }
-  }, [])
+  const visible = useMemo(() => {
+    const start = Math.min(rangeStart, rangeEnd)
+    const end = Math.max(rangeStart, rangeEnd)
+    return YEAR_DATA.slice(start, end + 1)
+  }, [rangeStart, rangeEnd])
 
-  const allRecords = useMemo(() => {
-    if (!payloads) return []
-    return [...payloads.AL.records, ...payloads.BA.records]
-  }, [payloads])
+  const p1 = useMemo(() => YEAR_DATA.slice(0, 8), [])
+  const p2 = useMemo(() => YEAR_DATA.slice(8), [])
 
-  const activeRecords = useMemo(() => {
-    const source = filters.state === 'AL' ? payloads?.AL.records : filters.state === 'BA' ? payloads?.BA.records : allRecords
-    return source ? sortRecords(filterRecords(source, filters), filters.sort) : []
-  }, [allRecords, filters, payloads])
+  const totalBirths = sum(visible.map((item) => item.births))
+  const avgMaterna = average(visible.map((item) => item.mortalidadeMaterna))
+  const avgInfantil = average(visible.map((item) => item.mortalidadeInfantil))
+  const consultasLatest = visible[visible.length - 1]?.consultas ?? 0
+  const natalidadeAvg = average(visible.map((item) => item.natalidadeAl))
+  const natalidadePrev = average(visible.map((item) => item.natalidadeBr))
 
-  useEffect(() => {
-    if (!activeRecords.length) return
-    const selectedStillVisible = activeRecords.some((item) => selectedId ? buildRecordKey(item) === selectedId : false)
-    if (!selectedStillVisible) {
-      setSelectedId(buildRecordKey(activeRecords[0]))
-    }
-  }, [activeRecords, selectedId])
+  const firstPeriod = average(p1.map((item) => item.natalidadeAl))
+  const secondPeriod = average(p2.map((item) => item.natalidadeAl))
+  const firstMaterna = average(p1.map((item) => item.mortalidadeMaterna))
+  const secondMaterna = average(p2.map((item) => item.mortalidadeMaterna))
+  const firstInfantil = average(p1.map((item) => item.mortalidadeInfantil))
+  const secondInfantil = average(p2.map((item) => item.mortalidadeInfantil))
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    window.localStorage.setItem(FILTERS_KEY, JSON.stringify(filters))
-  }, [filters])
+  const startYear = visible[0]?.year ?? YEAR_DATA[0].year
+  const endYear = visible[visible.length - 1]?.year ?? YEAR_DATA[YEAR_DATA.length - 1].year
 
-  useEffect(() => {
-    if (typeof window === 'undefined' || !selectedId) return
-    window.localStorage.setItem(SELECTED_KEY, selectedId)
-  }, [selectedId])
+  const natalidadeDelta = signedDelta(secondPeriod, firstPeriod)
+  const maternaDelta = signedDelta(secondMaterna, firstMaterna)
+  const infantilDelta = signedDelta(secondInfantil, firstInfantil)
+  const consultasDelta = signedDelta(consultasLatest, visible[0]?.consultas ?? consultasLatest)
 
-  const cityOptions = useMemo(() => {
-    const pool = filters.state === 'AL' ? payloads?.AL.records : filters.state === 'BA' ? payloads?.BA.records : allRecords
-    const unique = new Map<string, string>()
-    for (const item of pool || []) {
-      if (!item.city) continue
-      const key = normalizeText(item.city)
-      if (!unique.has(key)) unique.set(key, item.city)
-    }
-    return [...unique.values()].sort((a, b) => a.localeCompare(b, 'pt-BR'))
-  }, [allRecords, filters.state, payloads])
+  const natalidadePoints = useMemo(() => makeLinePoints(visible.map((item) => item.natalidadeAl), 760, 320), [visible])
+  const natalidadeBrPoints = useMemo(() => makeLinePoints(visible.map((item) => item.natalidadeBr), 760, 320), [visible])
+  const infantilPoints = useMemo(() => makeLinePoints(visible.map((item) => item.mortalidadeInfantil), 760, 260), [visible])
 
-  const typeOptions = useMemo(() => {
-    const pool = filters.state === 'AL' ? payloads?.AL.records : filters.state === 'BA' ? payloads?.BA.records : allRecords
-    const unique = new Set<string>()
-    for (const item of pool || []) unique.add(item.type_label)
-    return [...unique.values()].sort((a, b) => a.localeCompare(b, 'pt-BR'))
-  }, [allRecords, filters.state, payloads])
+  const natalidadeArea = makeAreaPath(natalidadePoints, 320)
+  const natalidadeBrArea = makeAreaPath(natalidadeBrPoints, 320)
+  const maternaBars = visible.map((item) => item.mortalidadeMaterna)
 
-  const selected = useMemo(() => activeRecords.find((item) => buildRecordKey(item) === selectedId) ?? activeRecords[0] ?? null, [activeRecords, selectedId])
-  const selectedPhotos = useHotelPhotos(selected)
-
-  const stats = useMemo(() => computeStats(activeRecords), [activeRecords])
-  const overallStats = useMemo(() => computeStats(allRecords), [allRecords])
-
-  const tierCounts = useMemo(() => {
-    const counter: Record<Tier, number> = { A: 0, B: 0, C: 0, D: 0 }
-    for (const item of activeRecords) counter[item.tier] += 1
-    return counter
-  }, [activeRecords])
-
-  const cityCounts = useMemo(() => {
-    const counter = new Map<string, number>()
-    for (const item of activeRecords) {
-      const city = item.city || 'Sem cidade'
-      counter.set(city, (counter.get(city) || 0) + 1)
-    }
-    return [...counter.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6)
-  }, [activeRecords])
-
-  const filteredPageSize = 18
-  const [page, setPage] = useState(1)
-  useEffect(() => {
-    setPage(1)
-  }, [filters.search, filters.city, filters.tier, filters.typeLabel, filters.minScore, filters.minStars, filters.contact, filters.sort, filters.state, JSON.stringify(filters.amenities)])
-
-  const pagedRecords = useMemo(() => {
-    const start = (page - 1) * filteredPageSize
-    return activeRecords.slice(start, start + filteredPageSize)
-  }, [activeRecords, page])
-
-  const totalPages = Math.max(1, Math.ceil(activeRecords.length / filteredPageSize))
-
-  useEffect(() => {
-    if (!mapRef.current || !layerRef.current) return
-    layerRef.current.clearLayers()
-
-    const renderer = L.canvas()
-    const bounds = L.latLngBounds([])
-
-    for (const record of activeRecords) {
-      if (record.lat == null || record.lon == null) continue
-      const marker = L.circleMarker([record.lat, record.lon], {
-        renderer,
-        radius: record.rank <= 10 ? 9 : 6,
-        color: stateAccent(record),
-        fillColor: stateAccent(record),
-        fillOpacity: record.rank <= 10 ? 0.95 : 0.78,
-        weight: buildRecordKey(record) === selectedId ? 2.5 : 1.25,
-        opacity: 1,
-      })
-
-      const popupHtml = `
-        <div style="min-width:180px">
-          <div style="font-weight:700;font-size:14px;margin-bottom:4px">${escapeHtml(record.name)}</div>
-          <div style="font-size:12px;color:#555;margin-bottom:8px">${escapeHtml(formatCompactContact(record))}</div>
-          <div style="font-size:12px;display:flex;gap:8px;flex-wrap:wrap">
-            <span>Score ${record.score}</span>
-            <span>${record.tier}</span>
-            <span>${formatStars(record.stars)}</span>
-          </div>
-        </div>
-      `
-      marker.bindPopup(popupHtml)
-      marker.on('click', () => setSelectedId(buildRecordKey(record)))
-      marker.addTo(layerRef.current)
-      bounds.extend([record.lat, record.lon])
-    }
-
-    if (bounds.isValid()) {
-      mapRef.current.fitBounds(bounds.pad(0.15), { animate: true, duration: 0.4 })
-    }
-  }, [activeRecords, selectedId])
-
-  useEffect(() => {
-    if (loading || !mapNodeRef.current || mapRef.current) return
-
-    const map = L.map(mapNodeRef.current, {
-      zoomControl: true,
-      scrollWheelZoom: false,
-      attributionControl: true,
-    }).setView([-12.5, -39.0], 6)
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors',
-    }).addTo(map)
-
-    const layer = L.layerGroup().addTo(map)
-    mapRef.current = map
-    layerRef.current = layer
-
-    window.requestAnimationFrame(() => {
-      map.invalidateSize()
-    })
-
-    return () => {
-      map.remove()
-      mapRef.current = null
-      layerRef.current = null
-    }
-  }, [loading])
-
-  useEffect(() => {
-    if (!selected || !mapRef.current || selected.lat == null || selected.lon == null) return
-    mapRef.current.flyTo([selected.lat, selected.lon], Math.max(mapRef.current.getZoom(), 11), { duration: 0.55 })
-  }, [selected])
-
-  function buildStateRecordsScope() {
-    if (filters.state === 'AL') return payloads?.AL.records ?? []
-    if (filters.state === 'BA') return payloads?.BA.records ?? []
-    return allRecords
+  const presetRange = (key: PresetKey) => {
+    const [start, end] = PRESETS[key]
+    setPreset(key)
+    setRangeStart(start)
+    setRangeEnd(end)
   }
 
-  function updateAmenity(key: AmenityKey) {
-    setFilters((current) => ({
-      ...current,
-      amenities: { ...current.amenities, [key]: !current.amenities[key] },
-    }))
-  }
-
-  function exportCsv(records: HotelRecord[]) {
-    const columns = [
-      'rank',
-      'score',
-      'tier',
-      'type_label',
-      'name',
-      'city',
-      'state',
-      'address',
-      'phone',
-      'website',
-      'email',
-      'stars',
-      'lat',
-      'lon',
-      'google_maps',
-      'osm_url',
-    ]
-    const quote = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`
-    const rows = [columns.join(',')]
-    for (const item of records) {
-      rows.push(
-        [
-          item.rank,
-          item.score,
-          item.tier,
-          item.type_label,
-          item.name,
-          item.city ?? '',
-          item.state,
-          item.address ?? '',
-          item.phone ?? '',
-          item.website ?? '',
-          item.email ?? '',
-          item.stars ?? '',
-          item.lat ?? '',
-          item.lon ?? '',
-          item.google_maps ?? '',
-          item.osm_url ?? '',
-        ]
-          .map(quote)
-          .join(','),
-      )
-    }
-
-    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `litoral-intelligence-${filters.state.toLowerCase()}-filtered.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  function resetFilters() {
-    setFilters(INITIAL_FILTERS)
-  }
-
-  function buildRecordKey(record: HotelRecord) {
-    return `${record.state_code}-${record.osm_type ?? 'x'}-${record.osm_id ?? record.rank}`
-  }
-
-  if (loading) {
-    return (
-      <main className="app-shell">
-        <LoadingState />
-      </main>
-    )
-  }
-
-  if (error) {
-    return (
-      <main className="app-shell">
-        <ErrorState message={error} onRetry={() => window.location.reload()} />
-      </main>
-    )
+  const onRangeChange = (setter: (value: number) => void) => (event: ChangeEvent<HTMLInputElement>) => {
+    setPreset('custom')
+    setter(Number(event.target.value))
   }
 
   return (
     <main className="app-shell">
-      <section className="hero-card">
-        <div className="hero-copy">
-          <div className="eyebrow-row">
-            <span className="eyebrow">Litoral Intelligence</span>
-            <span className="eyebrow badge">Hotelaria AL + BA</span>
-          </div>
-          <h1>Radar premium de hotelaria com ranking, mapa e detalhe por local.</h1>
-          <p className="lead">
-            Um painel robusto para explorar Alagoas e Bahia com filtros avançados, pins no mapa, indicadores de
-            contato e análise de potencial comercial. Tudo sem backend, pronto para validar operação e UX.
-          </p>
-
-          <div className="hero-actions">
-            <button type="button" className="button button-dark" onClick={() => document.getElementById('workspace')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
-              Explorar ranking
-            </button>
-            <button type="button" className="button button-light" onClick={() => exportCsv(activeRecords)}>
-              Exportar CSV
-            </button>
-            <button type="button" className="button button-light" onClick={resetFilters}>
-              Limpar filtros
-            </button>
-          </div>
-        </div>
-
-        <div className="hero-panel">
-          <div className="state-switcher">
-            {(['ALL', 'AL', 'BA'] as StateCode[]).map((state) => (
-              <button
-                key={state}
-                type="button"
-                className={`state-pill ${filters.state === state ? 'active' : ''}`}
-                onClick={() => setFilters((current) => ({ ...current, state }))}
-              >
-                <span>{STATE_LABELS[state]}</span>
-                <strong>{state === 'ALL' ? formatNumber(overallStats.total) : formatNumber((payloads?.[state]?.summary.total ?? 0))}</strong>
-              </button>
-            ))}
-          </div>
-
-          <div className="hero-stats">
-            <StatCard label="Resultados filtrados" value={formatNumber(stats.total)} meta={`de ${formatNumber(filters.state === 'ALL' ? overallStats.total : buildStateRecordsScope().length)} locais`} />
-            <StatCard label="Score médio" value={`${stats.avgScore}`} meta="qualidade do ranking" />
-            <StatCard label="Contato direto" value={formatNumber(stats.contactCount)} meta={`${formatNumber(stats.phoneCount)} telefone · ${formatNumber(stats.websiteCount)} site`} />
-            <StatCard label="Tier A" value={formatNumber(tierCounts.A)} meta={`${formatNumber(stats.premiumCount)} com score ≥ 70`} />
-          </div>
-        </div>
-      </section>
-
-      <section className="insights-grid">
-        <article className="insight-card">
-          <div className="card-head">
-            <div>
-              <p className="eyebrow">Distribuição por tier</p>
-              <h2>Ranking por qualidade</h2>
+      <div className="page-shell">
+        <header className="hero panel">
+          <div className="hero__topbar">
+            <div className="brand-pill">
+              <span className="brand-pill__dot" />
+              SECRIA · Painel estratégico
             </div>
-            <span className="card-kicker">Atualiza com filtros</span>
-          </div>
-          <TierBars counts={tierCounts} total={Math.max(stats.total, 1)} />
-        </article>
-
-        <article className="insight-card">
-          <div className="card-head">
-            <div>
-              <p className="eyebrow">Top cidades</p>
-              <h2>Concentração de oferta</h2>
-            </div>
-            <span className="card-kicker">Top 6</span>
-          </div>
-          <CityBars rows={cityCounts} total={Math.max(stats.total, 1)} />
-        </article>
-
-        <article className="insight-card contact-card">
-          <div className="card-head">
-            <div>
-              <p className="eyebrow">Cobertura de contato</p>
-              <h2>Capacidade de abordagem</h2>
-            </div>
-            <span className="card-kicker">Phone / site / e-mail</span>
-          </div>
-          <ContactCoverage stats={stats} total={Math.max(stats.total, 1)} />
-        </article>
-      </section>
-
-      <section id="workspace" className="workspace-grid">
-        <aside className="filters-panel">
-          <div className="panel-head">
-            <div>
-              <p className="eyebrow">Filtros</p>
-              <h2>Controle do painel</h2>
-            </div>
-            <button type="button" className="pill-button" onClick={resetFilters}>
-              Reset
-            </button>
-          </div>
-
-          <div className="control-group">
-            <label className="field">
-              <span>Busca</span>
-              <input value={filters.search} onChange={(e) => setFilters((current) => ({ ...current, search: e.target.value }))} placeholder="Hotel, pousada, cidade, rua, website..." />
-            </label>
-          </div>
-
-          <div className="control-grid two-up">
-            <label className="field">
-              <span>Cidade</span>
-              <select value={filters.city} onChange={(e) => setFilters((current) => ({ ...current, city: e.target.value }))}>
-                <option value="all">Todas</option>
-                {cityOptions.map((city) => (
-                  <option key={city} value={city}>{city}</option>
-                ))}
-              </select>
-            </label>
-
-            <label className="field">
-              <span>Tipo</span>
-              <select value={filters.typeLabel} onChange={(e) => setFilters((current) => ({ ...current, typeLabel: e.target.value }))}>
-                <option value="all">Todos</option>
-                {typeOptions.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </label>
-
-            <label className="field">
-              <span>Tier</span>
-              <select value={filters.tier} onChange={(e) => setFilters((current) => ({ ...current, tier: e.target.value as Filters['tier'] }))}>
-                <option value="all">Todos</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="D">D</option>
-              </select>
-            </label>
-
-            <label className="field">
-              <span>Ordenar por</span>
-              <select value={filters.sort} onChange={(e) => setFilters((current) => ({ ...current, sort: e.target.value as SortKey }))}>
-                <option value="score_desc">Score desc.</option>
-                <option value="rank_asc">Ranking</option>
-                <option value="stars_desc">Estrelas</option>
-                <option value="contact_desc">Contato</option>
-                <option value="city_asc">Cidade</option>
-                <option value="name_asc">Nome</option>
-              </select>
-            </label>
-          </div>
-
-          <div className="control-grid three-up">
-            <label className="field">
-              <span>Score mínimo</span>
-              <input type="range" min="0" max="100" value={filters.minScore} onChange={(e) => setFilters((current) => ({ ...current, minScore: Number(e.target.value) }))} />
-              <small className="hint">{filters.minScore}+ pontos</small>
-            </label>
-
-            <label className="field">
-              <span>Estrelas mín.</span>
-              <select value={filters.minStars} onChange={(e) => setFilters((current) => ({ ...current, minStars: Number(e.target.value) }))}>
-                <option value={0}>Qualquer</option>
-                <option value={3}>3+</option>
-                <option value={4}>4+</option>
-                <option value={5}>5</option>
-              </select>
-            </label>
-
-            <label className="field">
-              <span>Contato</span>
-              <select value={filters.contact} onChange={(e) => setFilters((current) => ({ ...current, contact: e.target.value as ContactFilter }))}>
-                <option value="all">Todos</option>
-                <option value="with-contact">Tem contato</option>
-                <option value="phone">Telefone</option>
-                <option value="website">Website</option>
-                <option value="email">E-mail</option>
-              </select>
-            </label>
-          </div>
-
-          <div className="amenities-box">
-            <div className="mini-title">Amenidades</div>
-            <div className="amenity-grid">
-              {AMENITIES.map((amenity) => (
-                <button
-                  key={amenity.key}
-                  type="button"
-                  className={`chip ${filters.amenities[amenity.key] ? 'active' : ''}`}
-                  onClick={() => updateAmenity(amenity.key)}
-                >
-                  {amenity.label}
-                </button>
-              ))}
+            <div className="hero__logos" aria-label="Identidade institucional">
+              <span>ALAGOAS</span>
+              <span>secretaria de estado</span>
+              <span>cria</span>
             </div>
           </div>
 
-          <div className="filter-footer">
-            <button type="button" className="button button-dark full" onClick={() => exportCsv(activeRecords)}>
-              Exportar filtrado
-            </button>
-            <p className="tiny-note">Busca sem acento, ordenação dinâmica e mapa sincronizado.</p>
-          </div>
-        </aside>
+          <div className="hero__main">
+            <div className="hero__copy">
+              <div className="eyebrow">Diagnóstico gerencial</div>
+              <h1>Diagnóstico Gerencial da Primeira Infância de Alagoas</h1>
+              <p>
+                Monitoramento executivo de 2007 a 2025 com leitura rápida de nascidos vivos,
+                razão de mortalidade materna, taxa de mortalidade infantil e consultas pré-natal.
+              </p>
+            </div>
 
-        <section className="main-column">
-          <div className="map-card">
-            <div className="card-head">
+            <div className="hero__stats">
               <div>
-                <p className="eyebrow">Mapa interativo</p>
-                <h2>Pins clicáveis no OSM</h2>
+                <span>Período ativo</span>
+                <strong>{startYear}–{endYear}</strong>
               </div>
-              <span className="card-kicker">{formatNumber(activeRecords.length)} pontos visíveis</span>
+              <div>
+                <span>Escopo</span>
+                <strong>Alagoas</strong>
+              </div>
+              <div>
+                <span>Base</span>
+                <strong>2007–2025</strong>
+              </div>
             </div>
-            <div className="map-wrap">
-              <div ref={mapNodeRef} className="map-canvas" aria-label="Mapa interativo com os locais filtrados" />
+          </div>
+        </header>
+
+        <section className="panel controls-panel">
+          <div className="controls-panel__header">
+            <div>
+              <div className="eyebrow">Recorte analítico</div>
+              <h2>Filtrar o período e o foco principal do painel</h2>
+            </div>
+            <div className="controls-panel__meta">
+              <span>{visible.length} anos selecionados</span>
+              <strong>{formatNumber(totalBirths)} nascidos vivos</strong>
             </div>
           </div>
 
-          <div className="ranking-card">
-            <div className="card-head">
-              <div>
-                <p className="eyebrow">Ranking</p>
-                <h2>Locais em destaque</h2>
-              </div>
-              <span className="card-kicker">Página {page} de {totalPages}</span>
-            </div>
+          <div className="preset-row">
+            <button className={preset === 'p1' ? 'chip chip--active' : 'chip'} onClick={() => presetRange('p1')}>2007–2014</button>
+            <button className={preset === 'p2' ? 'chip chip--active' : 'chip'} onClick={() => presetRange('p2')}>2015–2025</button>
+            <button className={preset === 'full' ? 'chip chip--active' : 'chip'} onClick={() => presetRange('full')}>2007–2025</button>
+            <button className={preset === 'custom' ? 'chip chip--active' : 'chip'} onClick={() => presetRange('custom')}>Recorte livre</button>
+          </div>
 
-            <div className="ranking-list">
-              {pagedRecords.length ? pagedRecords.map((record) => {
-                const key = buildRecordKey(record)
-                const isSelected = selected ? buildRecordKey(selected) === key : false
-                return (
-                  <button key={key} type="button" className={`ranking-row ${isSelected ? 'active' : ''}`} onClick={() => setSelectedId(key)}>
-                    <div className="rank-badge">
-                      <span>{record.rank}</span>
-                    </div>
-                    <div className="ranking-main">
-                      <div className="row-head">
-                        <strong>{record.name}</strong>
-                        <span className="score-pill" style={{ background: scoreBandColor(record.tier) }}>
-                          {record.score}
-                        </span>
-                      </div>
-                      <div className="row-meta">
-                        <span>{record.type_label}</span>
-                        <span>{record.city || 'Sem cidade'} · {record.state_code}</span>
-                        <span>{formatStars(record.stars)}</span>
-                        <span>{record.has_contact ? 'Contato pronto' : 'Contato parcial'}</span>
-                      </div>
-                    </div>
-                    <div className="row-tail">
-                      <span className={`tier tier-${record.tier}`}>Tier {record.tier}</span>
-                      <span>{record.has_website ? 'Site' : 'Sem site'}</span>
-                    </div>
-                  </button>
-                )
-              }) : (
-                <div className="empty-state large">
-                  Nenhum resultado com esses filtros. Tente remover um filtro de cidade, contato ou amenidade.
-                </div>
-              )}
-            </div>
-
-            <div className="pagination">
-              <button type="button" className="button button-light" onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={page <= 1}>
-                Anterior
-              </button>
-              <span>{page} / {totalPages}</span>
-              <button type="button" className="button button-light" onClick={() => setPage((value) => Math.min(totalPages, value + 1))} disabled={page >= totalPages}>
-                Próxima
-              </button>
-            </div>
+          <div className="range-grid">
+            <label>
+              <span>Ano inicial</span>
+              <input type="range" min={0} max={YEAR_DATA.length - 1} value={rangeStart} onChange={onRangeChange(setRangeStart)} />
+              <strong>{YEAR_DATA[rangeStart]?.year}</strong>
+            </label>
+            <label>
+              <span>Ano final</span>
+              <input type="range" min={0} max={YEAR_DATA.length - 1} value={rangeEnd} onChange={onRangeChange(setRangeEnd)} />
+              <strong>{YEAR_DATA[rangeEnd]?.year}</strong>
+            </label>
+            <label>
+              <span>Indicador em destaque</span>
+              <select value={focus} onChange={(event) => setFocus(event.target.value as FocusKey)}>
+                <option value="natalidade">Taxa de natalidade</option>
+                <option value="materna">Razão de mortalidade materna</option>
+                <option value="infantil">Mortalidade infantil</option>
+              </select>
+            </label>
           </div>
         </section>
 
-        <aside className="detail-panel">
-          <div className="card-head">
-            <div>
-              <p className="eyebrow">Detalhe do local</p>
-              <h2>Experiência premium</h2>
+        <section className="kpi-grid">
+          <MetricCard
+            label="Nascidos vivos"
+            value={formatNumber(totalBirths)}
+            delta={formatPercent(signedDelta(totalBirths, sum(YEAR_DATA.map((item) => item.births))))}
+            deltaLabel="vs. base histórica"
+            note="Acumulado do recorte ativo com leitura rápida do volume de nascimentos."
+            tone="neutral"
+          />
+          <MetricCard
+            label="Razão agregada de mortalidade materna"
+            value={formatNumber(avgMaterna, 2)}
+            delta={maternaDelta < 0 ? formatPercent(maternaDelta) : `+${formatNumber(maternaDelta, 1)}%`}
+            deltaLabel="P2 vs P1"
+            note="Mostra a pressão relativa sobre a série histórica e o comportamento entre períodos."
+            tone={metricTone(maternaDelta, true)}
+          />
+          <MetricCard
+            label="Taxa de mortalidade infantil"
+            value={formatNumber(avgInfantil, 2)}
+            delta={infantilDelta < 0 ? formatPercent(infantilDelta) : `+${formatNumber(infantilDelta, 1)}%`}
+            deltaLabel="P2 vs P1"
+            note="Indicador sensível à qualidade assistencial e ao acompanhamento pós-natal."
+            tone={metricTone(infantilDelta, true)}
+          />
+          <MetricCard
+            label="Consultas pré-natal 7+"
+            value={formatNumber(consultasLatest)}
+            delta={formatPercent(consultasDelta)}
+            deltaLabel="crescimento do recorte"
+            note="Leitura de cobertura assistencial e adesão às consultas recomendadas."
+            tone="good"
+          />
+        </section>
+
+        <section className="workspace-grid">
+          <div className="workspace-grid__main">
+            <ChartFrame
+              eyebrow="Série temporal principal"
+              title={FOCUS_LABELS[focus]}
+              subtitle="Comparativo visual entre Alagoas e a referência nacional, com leitura limiar e tendência de médio prazo."
+              action={<span className="chart-chip">{startYear} → {endYear}</span>}
+            >
+              <div className="chart-legend">
+                <span><i className="legend legend--al" /> Alagoas</span>
+                <span><i className="legend legend--br" /> Brasil</span>
+              </div>
+
+              <div className="chart-shell chart-shell--large">
+                <svg viewBox="0 0 760 320" role="img" aria-label="Gráfico de linhas da taxa de natalidade">
+                  <defs>
+                    <linearGradient id="areaAl" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stopColor="rgba(14, 116, 144, 0.26)" />
+                      <stop offset="100%" stopColor="rgba(14, 116, 144, 0.04)" />
+                    </linearGradient>
+                    <linearGradient id="areaBr" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stopColor="rgba(109, 40, 217, 0.18)" />
+                      <stop offset="100%" stopColor="rgba(109, 40, 217, 0.03)" />
+                    </linearGradient>
+                  </defs>
+                  {[0, 1, 2, 3, 4].map((tick) => {
+                    const y = 28 + ((320 - 56) / 4) * tick
+                    return <line key={tick} x1="28" y1={y} x2="732" y2={y} className="chart-grid" />
+                  })}
+                  {natalidadeArea ? <path d={natalidadeArea} fill="url(#areaAl)" /> : null}
+                  {natalidadeBrArea ? <path d={natalidadeBrArea} fill="url(#areaBr)" /> : null}
+                  <path d={makeLinePath(natalidadeBrPoints)} className="chart-line chart-line--br" />
+                  <path d={makeLinePath(natalidadePoints)} className="chart-line chart-line--al" />
+                  {natalidadePoints.map((point, index) => (
+                    <circle key={`al-${visible[index]?.year}`} cx={point.x} cy={point.y} r="3.8" className="chart-dot chart-dot--al" />
+                  ))}
+                  {natalidadeBrPoints.map((point, index) => (
+                    <circle key={`br-${visible[index]?.year}`} cx={point.x} cy={point.y} r="3" className="chart-dot chart-dot--br" />
+                  ))}
+                  {visible.map((item, index) => {
+                    if (index % 3 !== 0 && index !== visible.length - 1) return null
+                    const point = natalidadePoints[index]
+                    return (
+                      <g key={item.year}>
+                        <line x1={point.x} y1="290" x2={point.x} y2="296" className="chart-tick" />
+                        <text x={point.x} y="312" textAnchor="middle" className="chart-label">{item.year}</text>
+                      </g>
+                    )
+                  })}
+                </svg>
+              </div>
+
+              <div className="chart-footer">
+                <div>
+                  <span>Média selecionada</span>
+                  <strong>{formatNumber(natalidadeAvg, 2)}</strong>
+                </div>
+                <div>
+                  <span>Referência Brasil</span>
+                  <strong>{formatNumber(natalidadePrev, 2)}</strong>
+                </div>
+                <div>
+                  <span>Variação P2 vs P1</span>
+                  <strong className={natalidadeDelta < 0 ? 'text-good' : 'text-bad'}>
+                    {formatPercent(natalidadeDelta)}
+                  </strong>
+                </div>
+              </div>
+            </ChartFrame>
+
+            <div className="double-grid">
+              <ChartFrame
+                eyebrow="Monitoramento hospitalar e territorial"
+                title="Razão de mortalidade materna"
+                subtitle="Barra por ano com destaque visual para picos e convergência com a meta ODS."
+              >
+                <div className="chart-shell chart-shell--bar">
+                  <svg viewBox="0 0 760 300" role="img" aria-label="Gráfico de barras da razão de mortalidade materna">
+                    {[0, 1, 2, 3, 4].map((tick) => {
+                      const y = 30 + ((300 - 70) / 4) * tick
+                      return <line key={tick} x1="32" y1={y} x2="728" y2={y} className="chart-grid" />
+                    })}
+                    {visible.map((item, index) => {
+                      const max = Math.max(...maternaBars)
+                      const barHeight = ((item.mortalidadeMaterna / max) * 210) + 8
+                      const x = 44 + index * ((760 - 88) / Math.max(visible.length, 1))
+                      const y = 252 - barHeight
+                      return (
+                        <g key={item.year}>
+                          <rect
+                            x={x}
+                            y={y}
+                            width={Math.max(20, (760 - 88) / Math.max(visible.length, 1) - 4)}
+                            height={barHeight}
+                            rx="10"
+                            className={item.mortalidadeMaterna >= 70 ? 'bar bar--peak' : 'bar'}
+                          />
+                          <text x={x + 10} y={Math.max(y - 6, 24)} textAnchor="middle" className="chart-value">{formatNumber(item.mortalidadeMaterna, 1)}</text>
+                          {index % 3 === 0 || index === visible.length - 1 ? (
+                            <text x={x + 10} y="286" textAnchor="middle" className="chart-label">{item.year}</text>
+                          ) : null}
+                        </g>
+                      )
+                    })}
+                  </svg>
+                </div>
+                <div className="chart-footer">
+                  <div>
+                    <span>Média P1</span>
+                    <strong>{formatNumber(firstMaterna, 2)}</strong>
+                  </div>
+                  <div>
+                    <span>Média P2</span>
+                    <strong>{formatNumber(secondMaterna, 2)}</strong>
+                  </div>
+                  <div>
+                    <span>Leitura</span>
+                    <strong className={maternaDelta < 0 ? 'text-good' : 'text-warn'}>
+                      {maternaDelta < 0 ? 'Alívio relativo' : 'Oscilação crítica'}
+                    </strong>
+                  </div>
+                </div>
+              </ChartFrame>
+
+              <ChartFrame
+                eyebrow="Taxa sensível à atenção básica"
+                title="Mortalidade infantil"
+                subtitle="Linha contínua para verificar se o avanço do cuidado pré-natal aparece também no pós-parto."
+              >
+                <div className="chart-shell chart-shell--small">
+                  <svg viewBox="0 0 760 260" role="img" aria-label="Gráfico de linhas da mortalidade infantil">
+                    {[0, 1, 2, 3].map((tick) => {
+                      const y = 28 + ((260 - 56) / 3) * tick
+                      return <line key={tick} x1="28" y1={y} x2="732" y2={y} className="chart-grid" />
+                    })}
+                    {infantilPoints.length ? <path d={makeLinePath(infantilPoints)} className="chart-line chart-line--infant" /> : null}
+                    {infantilPoints.map((point, index) => (
+                      <circle key={`inf-${visible[index]?.year}`} cx={point.x} cy={point.y} r="3.6" className="chart-dot chart-dot--infant" />
+                    ))}
+                    {visible.map((item, index) => {
+                      if (index % 3 !== 0 && index !== visible.length - 1) return null
+                      const point = infantilPoints[index]
+                      return (
+                        <g key={item.year}>
+                          <line x1={point.x} y1="228" x2={point.x} y2="234" className="chart-tick" />
+                          <text x={point.x} y="246" textAnchor="middle" className="chart-label">{item.year}</text>
+                        </g>
+                      )
+                    })}
+                  </svg>
+                </div>
+                <div className="chart-footer">
+                  <div>
+                    <span>Média P1</span>
+                    <strong>{formatNumber(firstInfantil, 2)}</strong>
+                  </div>
+                  <div>
+                    <span>Média P2</span>
+                    <strong>{formatNumber(secondInfantil, 2)}</strong>
+                  </div>
+                  <div>
+                    <span>Tendência</span>
+                    <strong className={infantilDelta < 0 ? 'text-good' : 'text-warn'}>
+                      {infantilDelta < 0 ? 'Descendente' : 'Ascendente'}
+                    </strong>
+                  </div>
+                </div>
+              </ChartFrame>
             </div>
-            {selected && <span className="card-kicker">{selected.state_name}</span>}
           </div>
 
-          {selected ? (
-            <>
-              <div className="detail-hero">
-                <div className="detail-copy">
-                  <div className="detail-topline">
-                    <span className={`tier tier-${selected.tier}`}>Tier {selected.tier}</span>
-                    <span className="detail-score">Score {selected.score}</span>
-                  </div>
-                  <h3>{selected.name}</h3>
-                  <p>{selected.type_label} · {formatCompactContact(selected)}</p>
-                </div>
-                <div className="detail-badge">
-                  <div className="detail-initials">{createInitials(selected.name)}</div>
-                  <small>OSM ID</small>
-                  <strong>{selected.osm_id ?? '—'}</strong>
-                </div>
+          <aside className="workspace-grid__side">
+            <section className="panel side-panel side-panel--focus">
+              <div className="eyebrow">Comparativo do período</div>
+              <h2>Leitura executiva entre as duas fases</h2>
+              <p>Os dials abaixo espelham o comportamento médio do indicador em cada ciclo do painel.</p>
+              <div className="dial-grid">
+                <MiniDial label="Taxa de natalidade · P1" value={firstPeriod} target={17.04} unit="" tone="good" />
+                <MiniDial label="Taxa de natalidade · P2" value={secondPeriod} target={14.71} unit="" tone="good" />
               </div>
+              <ComparisonBar label="Natalidade média" value={secondPeriod} reference={firstPeriod} accent="linear-gradient(135deg, #0e7490, #14b8a6)" />
+              <ComparisonBar label="Mortalidade materna" value={secondMaterna} reference={firstMaterna} accent="linear-gradient(135deg, #b45309, #f97316)" />
+              <ComparisonBar label="Mortalidade infantil" value={secondInfantil} reference={firstInfantil} accent="linear-gradient(135deg, #4f46e5, #7c3aed)" />
+            </section>
 
-              <div className="detail-photos">
-                {selectedPhotos.loading ? (
-                  <div className="photo-skeleton">Buscando imagens premium...</div>
-                ) : (
-                  <div className="photo-grid">
-                    <PhotoFrame
-                      sources={selectedPhotos.urls}
-                      fallbackSource={buildFallbackPhotoDataUri(selected, 'hero')}
-                      alt={selected.name}
-                      className="photo-main"
-                      variant="hero"
-                    />
-                    <PhotoFrame
-                      sources={selectedPhotos.urls}
-                      fallbackSource={buildFallbackPhotoDataUri(selected, 'thumb-a')}
-                      alt={`${selected.name} detalhe`}
-                      className="photo-thumb"
-                      variant="thumb-a"
-                    />
-                    <PhotoFrame
-                      sources={selectedPhotos.urls}
-                      fallbackSource={buildFallbackPhotoDataUri(selected, 'thumb-b')}
-                      alt={`${selected.name} contexto`}
-                      className="photo-thumb"
-                      variant="thumb-b"
-                    />
-                  </div>
-                )}
-                <div className="photo-credit">Fonte: {selectedPhotos.source} · busca por <strong>{selected.photo_query}</strong></div>
-              </div>
+            <section className="panel side-panel">
+              <div className="eyebrow">Notas inteligentes</div>
+              <h2>O que o painel sugere hoje</h2>
+              <ul className="insight-list">
+                <li>
+                  <strong>Queda estrutural da natalidade:</strong> o período mais recente opera abaixo do ciclo inicial, sugerindo mudança demográfica e pressão menor sobre o volume absoluto de nascimentos.
+                </li>
+                <li>
+                  <strong>Picos críticos de mortalidade materna:</strong> os anos de ruptura chamam atenção para revisão de rede, fluxos e resolutividade hospitalar.
+                </li>
+                <li>
+                  <strong>Pré-natal em avanço:</strong> o crescimento de consultas reforça a importância da busca ativa e do acompanhamento gestacional.
+                </li>
+              </ul>
+            </section>
 
-              <div className="detail-grid">
-                <InfoCard label="Cidade" value={selected.city || 'Sem cidade'} />
-                <InfoCard label="Estrelas" value={formatStars(selected.stars)} />
-                <InfoCard label="Contato" value={selected.has_contact ? 'Pronto' : 'Parcial'} />
-                <InfoCard label="Tags" value={selected.tags_count != null ? formatNumber(Number(selected.tags_count)) : '—'} />
-              </div>
-
-              <div className="links-box">
-                <a href={mapUrl(selected)} target="_blank" rel="noreferrer" className="link-row">
-                  <span>Google Maps</span>
-                  <strong>Abrir rota</strong>
-                </a>
-                <a href={osmUrl(selected)} target="_blank" rel="noreferrer" className="link-row">
-                  <span>OpenStreetMap</span>
-                  <strong>Ver pin</strong>
-                </a>
-                {selected.website ? (
-                  <a href={selected.website} target="_blank" rel="noreferrer" className="link-row">
-                    <span>Website</span>
-                    <strong>Visitar site</strong>
-                  </a>
-                ) : null}
-              </div>
-
-              <div className="contact-box">
+            <section className="panel side-panel">
+              <div className="eyebrow">Metas e leitura rápida</div>
+              <h2>Resumo operacional</h2>
+              <div className="summary-grid">
                 <div>
-                  <span>Telefone</span>
-                  <strong>{selected.phone || '—'}</strong>
+                  <span>Meta ODS</span>
+                  <strong>&lt;= 30</strong>
                 </div>
                 <div>
-                  <span>E-mail</span>
-                  <strong>{selected.email || '—'}</strong>
+                  <span>RMM agregada</span>
+                  <strong>{formatNumber(avgMaterna, 2)}</strong>
                 </div>
                 <div>
-                  <span>Endereço</span>
-                  <strong>{selected.address || '—'}</strong>
+                  <span>TMI agregada</span>
+                  <strong>{formatNumber(avgInfantil, 2)}</strong>
                 </div>
                 <div>
-                  <span>Horário</span>
-                  <strong>{selected.opening_hours || '—'}</strong>
+                  <span>Consultas 7+</span>
+                  <strong>{formatNumber(consultasLatest)}</strong>
                 </div>
               </div>
-
-              <div className="amenity-box">
-                {AMENITIES.map((amenity) => {
-                  const active = getAmenityValue(selected, amenity.key)
-                  return (
-                    <span key={amenity.key} className={`amenity-pill ${active ? 'on' : 'off'}`}>
-                      {amenity.label}
-                    </span>
-                  )
-                })}
+              <div className="summary-footnote">
+                Painel desenhado para leitura rápida, com contraste forte, densidade executiva e adaptação mobile-first.
               </div>
-
-              <div className="detail-footer">
-                <button type="button" className="button button-light" onClick={() => activeRecords[0] && setSelectedId(buildRecordKey(activeRecords[0]))}>
-                  Primeiro visível
-                </button>
-                <button type="button" className="button button-dark" onClick={() => exportCsv([selected])}>
-                  Exportar este local
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="empty-state large">Selecione um local no ranking ou no mapa.</div>
-          )}
-        </aside>
-      </section>
-
-      <footer className="footer-card">
-        <div>
-          <p className="eyebrow">Base de dados</p>
-          <h2>Alagoas + Bahia em um único sistema</h2>
-        </div>
-        <p>
-          Fonte: OpenStreetMap / Overpass API com enriquecimento público. Layout pensado para vender, explorar e
-          filtrar a base como um produto premium interno.
-        </p>
-      </footer>
+            </section>
+          </aside>
+        </section>
+      </div>
     </main>
   )
-}
-
-function LoadingState() {
-  return (
-    <section className="state-card center-card">
-      <p className="eyebrow">Carregando</p>
-      <h1>Litoral Intelligence</h1>
-      <p>Preparando os dados de Alagoas e Bahia, pins, rankings e fotos.</p>
-      <div className="skeleton-grid">
-        <div className="skeleton" />
-        <div className="skeleton" />
-        <div className="skeleton" />
-      </div>
-    </section>
-  )
-}
-
-function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
-  return (
-    <section className="state-card center-card">
-      <p className="eyebrow">Erro</p>
-      <h1>Não foi possível abrir o painel</h1>
-      <p>{message}</p>
-      <button type="button" className="button button-dark" onClick={onRetry}>
-        Tentar novamente
-      </button>
-    </section>
-  )
-}
-
-function StatCard({ label, value, meta }: { label: string; value: string; meta: string }) {
-  return (
-    <article className="stat-card">
-      <span>{label}</span>
-      <strong>{value}</strong>
-      <small>{meta}</small>
-    </article>
-  )
-}
-
-function TierBars({ counts, total }: { counts: Record<Tier, number>; total: number }) {
-  const rows: Array<{ tier: Tier; label: string }> = [
-    { tier: 'A', label: 'Tier A' },
-    { tier: 'B', label: 'Tier B' },
-    { tier: 'C', label: 'Tier C' },
-    { tier: 'D', label: 'Tier D' },
-  ]
-  return (
-    <div className="bars-list">
-      {rows.map(({ tier, label }) => {
-        const value = counts[tier]
-        const width = total ? Math.min(100, (value / total) * 100) : 0
-        return (
-          <div key={tier} className="bar-row">
-            <div className="bar-label">
-              <span>{label}</span>
-              <strong>{formatNumber(value)}</strong>
-            </div>
-            <div className="bar-track"><span style={{ width: `${width}%`, background: scoreBandColor(tier) }} /></div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-function CityBars({ rows, total }: { rows: Array<[string, number]>; total: number }) {
-  return (
-    <div className="bars-list">
-      {rows.length ? rows.map(([city, value]) => {
-        const width = total ? Math.min(100, (value / total) * 100 * 4) : 0
-        return (
-          <div key={city} className="bar-row">
-            <div className="bar-label">
-              <span>{city}</span>
-              <strong>{formatNumber(value)}</strong>
-            </div>
-            <div className="bar-track subtle"><span style={{ width: `${Math.max(12, width)}%` }} /></div>
-          </div>
-        )
-      }) : <div className="empty-state">Sem cidades para mostrar.</div>}
-    </div>
-  )
-}
-
-function ContactCoverage({ stats, total }: { stats: Stats; total: number }) {
-  const rows = [
-    ['Telefone', stats.phoneCount],
-    ['Website', stats.websiteCount],
-    ['E-mail', stats.emailCount],
-    ['Contato direto', stats.contactCount],
-  ] as const
-
-  return (
-    <div className="coverage-grid">
-      {rows.map(([label, value]) => {
-        const width = total ? (value / total) * 100 : 0
-        return (
-          <div key={label} className="coverage-row">
-            <div className="coverage-head">
-              <span>{label}</span>
-              <strong>{formatNumber(value)}</strong>
-            </div>
-            <div className="bar-track soft"><span style={{ width: `${width}%` }} /></div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-function InfoCard({ label, value }: { label: string; value: string }) {
-  return (
-    <article className="info-card">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </article>
-  )
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
 }
 
 export default App
